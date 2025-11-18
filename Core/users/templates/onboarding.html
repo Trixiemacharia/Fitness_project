@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ONBOARDING</title>
+        <link rel="stylesheet" href="{% static 'css/onboarding.css' %}">
+    </head>
+    <body>
+        <div class="onboarding-container">
+            <div class="question-box">
+                <h2>{{question.question}}</h2>
+                <form method="POST">
+                    {% csrf_token %}
+                    {% if question.type == 'choice' %}
+                    {% for choice in question.choices %}
+                    <label class="choice-label"><input type="radio" name="answer" value="{{ choice }}" required>{{ choice}}</label><br>
+                    {% endfor %}
+                    {% elif question.type == 'multi' %}
+                    <label class="choice-label"><input type="checkbox" name="answer" value="{{choice}}">{{choice}}</label><br>
+
+                    {% for choice in question.choices %}
+                    <label class="choice-label"><input type="checkbox" name="answer" value="{{ choice }}" >{{choice}}</label><br>
+                    {% endfor %}
+                    {% elif question.type == 'number' %}
+                    <label class="choice-label"><input type="number" name="answer" required></label><br>
+                    {% endif %}
+
+                    <button type="submit">Next</button>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

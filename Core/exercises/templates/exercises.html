@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Exercises</title>
+    </head>
+    <body>
+        <div class="dashboard" id="dashboard">
+            <div class="category_card" onclick="openCategory('weight loss')">
+                <img src="" alt="weight loss">
+                <span>Weight Loss</span>
+            </div>
+            <div class="category_card" onclick="openCategory('bulk')">
+                <img src="" alt="bulk">
+                <span>Bulk</span>
+            </div>
+            <div class="category_card" onclick="openCategory('tone')">
+                <img src="" alt="tone">
+                <span>Tone</span>
+            </div>
+            <div class="category_card" onclick="openCategory('stretching')">
+                <img src="" alt="stretching">
+                <span>Stretching</span>
+            </div>
+            <!--Bottom nav-->
+            <div class="bottom-tab">
+                <div class="tab-item"><img src="" alt="">Home</div>
+                <div class="tab-item"><img src="" alt="">Exercises</div>
+                <div class="tab-item"><img src="" alt="">Settings</div>
+                <div class="tab-item"><img src="" alt="">Profile</div>
+            </div>
+            <!--Exercises Modal/Section-->
+            <div id="exercises-section" style="display: none;">
+                <button onclick="closeExercises()">Back</button>
+                <h2 id="category-title"></h2>
+                <div id="exercises-list"></div>
+            </div>
+        </div>
+    </body>
+</html>
