@@ -27,7 +27,7 @@ function showExercises(category){
     category.exercises.forEach(ex => {
         const exCard = document.createElement('div');
         exCard.className = 'exercise-card';
-        exCard.innerHTML = '<h3>${ex.name}</h3> <p>$[ex.description}</p> ${ex.demo_video ? '<video src="${ex.demo_video}" controls width="250"></video>': ''}' ;
+        //exCard.innerHTML = '<h3>${ex.name}</h3> <p>$[ex.description}</p> ${ex.demo_video ? '<video src="${ex.demo_video}" controls width="250"></video>': ''}' ;
         exercisesList.appendChild(exCard);
     });
 

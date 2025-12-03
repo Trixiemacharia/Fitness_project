@@ -1,7 +1,8 @@
 from django.shortcuts import render,redirect
-from .models import UserProfile
+from users.models import UserProfile
 from .forms import OnboardingForm
 from django.contrib.auth.decorators import login_required
+from exercises.models import Category, Exercise
 
 @login_required
 def create_profile(request):
@@ -44,4 +45,18 @@ def delete_profile(request):
 @login_required
 def dashboard(request):
     return render(request,'dashboard.html')
+
+@login_required
+def dashboard(request):
+    # get user profile
+    profile = UserProfile.objects.get(user=request.user)
+
+    # filter categories based on user's goal_type
+    categories = Category.objects.filter(name__icontains=profile.goal_type)
+
+    context = {
+        "categories": categories,
+        "profile": profile
+    }
+    return render(request, "dashboard.html", context)
 

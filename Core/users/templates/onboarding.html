@@ -13,7 +13,7 @@
                     {% csrf_token %}
                     {% if question.type == 'choice' %}
                     {% for choice in question.choices %}
-                    <label class="choice-label"><input type="radio" name="answer" value="{{ choice }}" required>{{ choice}}</label><br>
+                    <label class="choice-label"><input type="radio" name="answer" value="{{ choice.0 }}" required>{{ choice.1 }}</label><br>
                     {% endfor %}
                     {% elif question.type == 'multi' %}
                     <label class="choice-label"><input type="checkbox" name="answer" value="{{choice}}">{{choice}}</label><br>

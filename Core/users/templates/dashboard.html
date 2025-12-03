@@ -1,1 +1,59 @@
 <h2>Welcome😁 {{ user.username }}!</h2>
+
+<div class="dashboard" id="dashboard">
+    {% for category in categories %}
+    <div class="category_card" onclick="openCategory('{{ category.name }}')">
+        <img src="{{ category.image.url if category.image else '' }}" alt="{{ category.name }}">
+        <span>{{ category.name }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Exercises Modal -->
+<div id="exercises-section" style="display: none;">
+    <button onclick="closeExercises()">Back</button>
+    <h2 id="category-title"></h2>
+    <div id="exercises-list"></div>
+</div>
+
+<script>
+function openCategory(categoryName){
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("exercises-section").style.display = "block";
+    document.getElementById("category-title").innerText = categoryName;
+
+    // fetch exercises filtered by category AND user profile preferences
+    fetch(`/api/exercises/?category__name=${categoryName}`)
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById("exercises-list");
+            list.innerHTML = "";
+            data.forEach(ex => {
+                // optionally, filter by user's prefered_focus
+                const focusMatch = profile.prefered_focus.some(focus => ex.name.toLowerCase().includes(focus));
+                if(focusMatch){
+                    const div = document.createElement("div");
+                    div.className = "exercise-card";
+                    div.innerHTML = `
+                        <h3>${ex.name}</h3>
+                        <p>${ex.description}</p>
+                        <video width="300" controls>
+                            <source src="${ex.demo_video}" type="video/mp4">
+                        </video>
+                        <button onclick="openWorkoutDetail(${ex.id})">View Details</button>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+        });
+}
+
+function closeExercises(){
+    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("exercises-section").style.display = "none";
+}
+
+function openWorkoutDetail(id){
+    window.location.href = `/workouts/${id}/`;
+}
+</script>

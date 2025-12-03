@@ -3,16 +3,52 @@ from django.contrib.auth.decorators import login_required
 from .models import UserProfile
 
 ONBOARDING_STEPS =[
-    {"field":"gender", "question":"What is your gender?", "type":"choice","choices":[('M','Male'),('F','Female')]},
+    {"field":"gender", "question":"What is your gender?", "type":"choice","choices":[
+        ('M','Male'),
+        ('F','Female')
+        ]},
     {"field":"age","question":"How old are you?","type":"number"},
     {"field":"weight","question":"What is your current weight(kg)?","type":"number"},
     {"field":"height","question":"What is your height(cm?","type":"number"},
-    {"field":"goal_type","question":"What is your fitness goal?","type":"choice","choices":["Tone","Bulk","Lose Weight"]},
-    {"field":"activity_level","question":"How active are you?","type":"choice","choices":["Low","Moderate","High"]},
-    {"field":"fitness_level","question":"What's your current fitness level?","type":"choice","choices":["Beginner","Intermediate","Advanced"]},
-    {"field":"prefered_focus","question":"Which areas do you want to focus on?","type":"multi","choices":["Legs","Abs","Glutes","Arms","Back","Shoulders"]},
-    {"field":"equipment","question":"What equipment do you have access to?","type":"multi","choices":["Dumbells","Resistance bands","Barbell","Hack squat machine","Leg press machine","None"]},
-    {"field":"meal_plan_recommendations","question":"Would you like a meal plan?","type":"choices","choices":["Yes","No"]},
+    {"field":"goal_type","question":"What is your fitness goal?","type":"choice","choices":[('tone','Tone'), ('bulk','Bulk'), ('lose_weight','Lose Weight')]},
+    {"field":"activity_level","question":"How active are you?","type":"choice","choices": [
+            ('sedentary', 'Sedentary'),
+            ('light', 'Lightly Active'),
+            ('moderate', 'Moderately Active'),
+            ('active', 'Active'),
+            ('very_active', 'Very Active'),
+        ],
+    },
+
+    {"field":"fitness_level","question":"What's your current fitness level?","type":"choice","choices": [
+            ('beginner', 'Beginner'),
+            ('intermediate', 'Intermediate'),
+            ('advanced', 'Advanced'),
+        ],
+    },
+    {"field":"prefered_focus","question":"Which areas do you want to focus on?","type":"multi","choices": [
+            ('legs', 'Legs'),
+            ('abs', 'Abs'),
+            ('glutes', 'Glutes'),
+            ('arms', 'Arms'),
+            ('back', 'Back'),
+            ('shoulder', 'Shoulders'),
+        ],
+    },
+    {"field":"equipment","question":"What equipment do you have access to?","type":"multi","choices":  [
+            ('none', 'None'),
+            ('dumbells', 'Dumbells'),
+            ('resistance_bands', 'Resistance Bands'),
+            ('barbell', 'Barbell'),
+            ('machines', 'Machines'),
+        ],
+    },
+
+    {"field":"meal_plan_recommendations","question":"Would you like a meal plan?","type":"choice","choices":[
+            ('Yes', 'Yes'),
+            ('No', 'No'),
+        ],
+    },
 ]
 
 
@@ -25,6 +61,9 @@ def onboarding(request):
     if step >= len(ONBOARDING_STEPS):
         userprofile = UserProfile.objects.create(
             user=request.user,
+            name = request.user.username,
+            email=request.user.email,
+            password_hash=request.user.password,  
             gender = data.get("gender"),
             age = data.get("age"),
             height = data.get("height"),
@@ -32,8 +71,8 @@ def onboarding(request):
             goal_type=data.get("goal_type"),
             activity_level = data.get("activity_level"),
             fitness_level = data.get("fitness_level"),
-            prefered_focus = ",".join(data.get("prefered_focus",[])),
-            equipment = ",".join(data.get("equipment",[])),
+            prefered_focus = data.get("prefered_focus",[]),
+            equipment = data.get("equipment",[]),
             meal_plan_recommendations = data.get("meal_plan_recommendations")
         )
 
@@ -41,10 +80,12 @@ def onboarding(request):
         return redirect("dashboard")
     question = ONBOARDING_STEPS[step]
     if request.method == "POST":
-        data = request.session.get("onboarding_dats",{})
+        data = request.session.get("onboarding_data",{})
         answer= request.POST.getlist("answer")
-        if question["type"] in ["multi"]:
-            request.POST.get("answer")
+        if question["type"] == "multi":
+            answer = request.POST.getlist("answer")
+        else:
+            answer =request.POST.get("answer")
         data[question["field"]]= answer
         request.session["onboarding_data"] = data
 
