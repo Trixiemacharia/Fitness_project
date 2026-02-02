@@ -84,6 +84,8 @@ def onboarding(request):
         answer= request.POST.getlist("answer")
         if question["type"] == "multi":
             answer = request.POST.getlist("answer")
+        elif question["type"] == "choice":
+            answer=request.POST.get("answer")
         else:
             answer =request.POST.get("answer")
         data[question["field"]]= answer

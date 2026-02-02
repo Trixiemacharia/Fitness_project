@@ -1,0 +1,15 @@
+<div class="card-container">
+
+{% for card in workout_cards %}
+    <div class="category_card"
+         onclick="window.location.href='/exercises/{{ card.slug }}/'">
+
+        <div style="font-size:30px;">{{ card.icon }}</div>
+        <span>{{ card.title }}</span>
+
+    </div>
+{% empty %}
+    <p>No workouts available yet.</p>
+{% endfor %}
+
+</div>
