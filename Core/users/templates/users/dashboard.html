@@ -4,14 +4,18 @@
 <html>
     <head>
         <title>
-            <link rel="stylesheet" href="{% static 'css/exercise.css' %}">
+            <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
         </title>
     </head>
     <body>
         <div class="dashboard">
 <h2>Welcome😁 {{ profile.name }}!</h2>
 
-{% include "exercises/category_cards.html" %}
+<!--Section Cards -->
+<section>
+    <h3>Your Recommended Workouts</h3>
+    {% include "exercises/category_cards.html" %}
+</section>
 
 </div>
 

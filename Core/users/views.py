@@ -44,19 +44,52 @@ def delete_profile(request):
 
 @login_required
 def dashboard(request):
-    return render(request,'dashboard.html')
-
-@login_required
-def dashboard(request):
+    try:
     # get user profile
-    profile = UserProfile.objects.get(user=request.user)
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        #user logged in but never completed onboarding
+        return redirect("onboarding")
+    
+    workout_cards = []
 
-    # filter categories based on user's goal_type
-    categories = Category.objects.filter(name__icontains=profile.goal_type)
+    # Goal-based cards
+    if profile.goal_type == 'lose_weight':
+        workout_cards += [
+            {'title': 'Full Body Fat Burn', 'slug': 'full_body', 'icon': '🔥'},
+            {'title': 'HIIT & Cardio', 'slug': 'hiit', 'icon': '⚡'},
+        ]
 
-    context = {
-        "categories": categories,
-        "profile": profile
-    }
-    return render(request, "dashboard.html", context)
+    elif profile.goal_type == 'bulk':
+        workout_cards += [
+            {'title': 'Push / Pull / Legs', 'slug': 'ppl', 'icon': '🏋🏽‍♀️'},
+            {'title': 'Upper / Lower Split', 'slug': 'upper_lower', 'icon': '💪🏽'},
+        ]
+
+    elif profile.goal_type == 'tone':
+        workout_cards += [
+            {'title': 'Lean Toning', 'slug': 'toning', 'icon': '✨'},
+            {'title': 'Full Body Sculpt', 'slug': 'full_body', 'icon': '🔥'},
+        ]
+
+    # Focus-based cards
+    for focus in profile.prefered_focus:
+        workout_cards.append({
+            'title': f"{focus.capitalize()} Focus",
+            'slug': focus,
+            'icon': '🎯'
+        })
+
+    # Fitness-level card
+    if profile.fitness_level == 'beginner':
+        workout_cards.append({
+            'title': 'Beginner Friendly',
+            'slug': 'beginner',
+            'icon': '🌱'
+        })
+
+    return render(request, "users/dashboard.html", {
+        "profile": profile,
+        "workout_cards": workout_cards
+    })
 
