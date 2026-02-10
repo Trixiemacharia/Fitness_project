@@ -173,4 +173,4 @@ def toggle_backup_reminder(request):
         profile = request.user.profile
         profile.backup_reminder = not profile.backup_reminder
         profile.save()
-        return JsonResponse({'status': profile.backup_reminder})
+        return JsonResponse({'status': profile.backup_reminder})  
