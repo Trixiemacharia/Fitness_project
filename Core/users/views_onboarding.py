@@ -92,4 +92,4 @@ def onboarding(request):
         request.session["onboarding_data"] = data
 
         return redirect(f"/onboarding/?step={step + 1}")
-    return render(request,"onboarding.html",{"question":question,"step":step})
+    return render(request,"users/onboarding.html",{"question":question,"step":step})

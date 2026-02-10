@@ -3,23 +3,84 @@
 
 <html>
     <head>
-        <title>
+        <title>Dashboard</title>
             <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-        </title>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=search" />
     </head>
     <body>
+        <div class="profile-avatar-btn" id="avatarBtn">
+                {% if profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="Avatar">
+                {% else %}
+                <span>{{ profile.name|slice:":1"|upper }}</span>
+                {% endif %}
+            </div>
+
+                 <!-- PROFILE PANEL -->
+<div class="profile-panel" id="profilePanel">
+
+    <div class="profile-header">
+        <strong>{{ profile.name }}</strong>
+        <small>{{ request.user.email }}</small>
+    </div>
+
+    <button class="panel-btn" id="renameBtn">Rename</button>
+    <button class="panel-btn" id="uploadPhotoBtn">Change Profile Picture</button>
+    <!--backup reminder toggle button-->
+    <div class="toggle-row">
+        <span>Backup reminder</span>
+        <label class="switch">
+            <input type="checkbox" id="backupToggle"
+            {% if profile.backup_reminder %}checked{% endif %}>
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <hr>
+
+    <button class="panel-btn danger" id="logoutBtn">Sign Out</button>
+    <button class="panel-btn danger" id="deleteBtn">Delete Account</button>
+    </div>
+
+<!-- HIDDEN FILE INPUT -->
+<input type="file" id="profileImageInput" accept="image/*" hidden>
+
+       <!--DASHBOARD CONTENT-->
         <div class="dashboard">
-<h2>Welcome😁 {{ profile.name }}!</h2>
+             <header class="dashboard-header">
+            <div class="hamburger">&#9776;</div>
+            <h2>Welcome, {{ profile.name }}!</h2>
+        </header>
 
-<!--Section Cards -->
-<section>
-    <h3>Your Recommended Workouts</h3>
-    {% include "exercises/category_cards.html" %}
-</section>
+        <!-- SEARCH BAR -->
+        <div class="search">
+            <span class="search-icon material-symbols-outlined">search</span>
+            <input class="search-input" type="search" id="search-workout" placeholder="Search workout" autocomplete="off">
+        </div>
 
-</div>
+        <!-- FILTER CHIPS -->
+        <div class="filter-chips">
+            <div class="chip {% if profile.fitness_level == 'beginner' %}selected{% endif %}" data-level="beginner">Beginner</div>
+            <div class="chip {% if profile.fitness_level == 'intermediate' %}selected{% endif %}" data-level="intermediate">Intermediate</div>
+            <div class="chip {% if profile.fitness_level == 'advanced' %}selected{% endif %}" data-level="advanced">Advanced</div>
+        </div>
+
+        <!-- WORKOUT CARDS -->
+        <section class="card-container">
+            {% for card in workout_cards %}
+            <div class="category_card" data-level="{{ card.level }}" onclick="window.location.href='/exercises/{{ card.slug }}/'">
+                <div class="icon">{{ card.icon }}</div>
+                <span>{{ card.title }}</span>
+                </div>
+                {% empty %}
+                <p>No workouts available yet.</p>
+                {% endfor %}
+        </section>
+    </div> 
 
 {% include "exercises/bottom_nav.html" %}
+
+<script src="{% static 'js/dashboard.js' %}"></script>
 
 </body>
 </html>

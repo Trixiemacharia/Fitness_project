@@ -1,7 +1,7 @@
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     const welcomeScreen = document.getElementById('welcome-screen');
-    const authContainer = document.getElementById('auth-container');
+    const authContainer = document.getElementBy('login-form');
     
     // Show welcome screen immediately
     welcomeScreen.style.display = 'flex';

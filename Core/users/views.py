@@ -3,6 +3,7 @@ from users.models import UserProfile
 from .forms import OnboardingForm
 from django.contrib.auth.decorators import login_required
 from exercises.models import Category, Exercise
+from django.http import JsonResponse
 
 @login_required
 def create_profile(request):
@@ -56,28 +57,28 @@ def dashboard(request):
     # Goal-based cards
     if profile.goal_type == 'lose_weight':
         workout_cards += [
-            {'title': 'Full Body Fat Burn', 'slug': 'full_body', 'icon': '🔥'},
-            {'title': 'HIIT & Cardio', 'slug': 'hiit', 'icon': '⚡'},
+            {'title': 'Full Body Fat Burn', 'slug': 'full_body', 'level':'beginner'},
+            {'title': 'HIIT & Cardio', 'slug': 'hiit', 'level':'intermediate'},
         ]
 
     elif profile.goal_type == 'bulk':
         workout_cards += [
-            {'title': 'Push / Pull / Legs', 'slug': 'ppl', 'icon': '🏋🏽‍♀️'},
-            {'title': 'Upper / Lower Split', 'slug': 'upper_lower', 'icon': '💪🏽'},
+            {'title': 'Push / Pull / Legs', 'slug': 'ppl','level':'intermediate'},
+            {'title': 'Upper / Lower Split', 'slug': 'upper_lower','level':'advanced'},
         ]
 
     elif profile.goal_type == 'tone':
         workout_cards += [
-            {'title': 'Lean Toning', 'slug': 'toning', 'icon': '✨'},
-            {'title': 'Full Body Sculpt', 'slug': 'full_body', 'icon': '🔥'},
+            {'title': 'Lean Toning', 'slug': 'toning','level':'beginner'},
+            {'title': 'Full Body Sculpt', 'slug': 'full_body','level':'intermediate'},
         ]
 
     # Focus-based cards
     for focus in profile.prefered_focus:
         workout_cards.append({
-            'title': f"{focus.capitalize()} Focus",
+            'title': f"{focus.capitalize()} Workout",
             'slug': focus,
-            'icon': '🎯'
+            'level': profile.fitness_level
         })
 
     # Fitness-level card
@@ -85,11 +86,91 @@ def dashboard(request):
         workout_cards.append({
             'title': 'Beginner Friendly',
             'slug': 'beginner',
-            'icon': '🌱'
+            'icon': '🌱',
+            'level':'beginner'
         })
+
+         # ---- SORT: put cards matching user's fitness level first ----
+    workout_cards.sort(key=lambda x: 0 if x['level'] == profile.fitness_level else 1)
 
     return render(request, "users/dashboard.html", {
         "profile": profile,
         "workout_cards": workout_cards
     })
 
+@login_required
+def search_dashboard_workouts(request):
+    query = request.GET.get('q', '').lower()
+
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"results": []})
+
+    workout_cards = []
+
+    # --- SAME LOGIC AS DASHBOARD ---
+    if profile.goal_type == 'lose_weight':
+        workout_cards += [
+            {'title': 'Full Body Fat Burn', 'slug': 'full_body', 'level': 'beginner'},
+            {'title': 'HIIT & Cardio', 'slug': 'hiit', 'level': 'intermediate'},
+        ]
+
+    elif profile.goal_type == 'bulk':
+        workout_cards += [
+            {'title': 'Push / Pull / Legs', 'slug': 'ppl', 'level': 'intermediate'},
+            {'title': 'Upper / Lower Split', 'slug': 'upper_lower', 'level': 'advanced'},
+        ]
+
+    elif profile.goal_type == 'tone':
+        workout_cards += [
+            {'title': 'Lean Toning', 'slug': 'toning', 'level': 'beginner'},
+            {'title': 'Full Body Sculpt', 'slug': 'full_body', 'level': 'intermediate'},
+        ]
+
+    for focus in profile.prefered_focus:
+        workout_cards.append({
+            'title': f"{focus.capitalize()} Workout",
+            'slug': focus,
+            'level': profile.fitness_level
+        })
+
+    if profile.fitness_level == 'beginner':
+        workout_cards.append({
+            'title': 'Beginner Friendly',
+            'slug': 'beginner',
+            'icon': '🌱',
+            'level': 'beginner'
+        })
+
+    # --- SEARCH FILTER ---
+    filtered = [
+        card for card in workout_cards
+        if query in card['title'].lower()
+    ]
+
+    return JsonResponse({"results": filtered})
+
+@login_required
+def upload_profile_image(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+        image = request.FILES.get('profile_image')
+
+        if image:
+            profile.profile_image = image
+            profile.save()
+            return JsonResponse({
+                'success': True,
+                'image_url': profile.profile_image.url
+            })
+
+    return JsonResponse({'success': False})
+
+@login_required
+def toggle_backup_reminder(request):
+    if request.method == 'POST':
+        profile = request.user.profile
+        profile.backup_reminder = not profile.backup_reminder
+        profile.save()
+        return JsonResponse({'status': profile.backup_reminder})

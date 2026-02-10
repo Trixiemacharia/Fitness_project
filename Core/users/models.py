@@ -36,8 +36,10 @@ class UserProfile(models.Model):
         ('machines','Machines'),
     ]
 
-    user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True)
+    user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True,related_name='profile')
     name = models.CharField(max_length=20)
+    profile_image = models.ImageField(upload_to='avatars/',blank=True, null=True)
+    backup_reminder = models.BooleanField(default=False)
     email = models.EmailField(unique=True)
     password_hash = models.CharField(max_length=255, unique=True)
     gender = models.CharField(max_length=1,choices=[('M','Male'),('F','Female')])

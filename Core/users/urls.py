@@ -14,4 +14,7 @@ urlpatterns=[
     path('profile/edit/',views.update_profile,name='update_profile'),
     path('profile/delete/',views.delete_profile,name='delete_profile'),
     path('dashboard/',views.dashboard,name='dashboard'),
+    path('dashboard/search/', views.search_dashboard_workouts, name='search_dashboard_workouts'),
+    path('upload-profile-image/', views.upload_profile_image, name='upload_profile_image'),
+    path('toggle-backup/', views.toggle_backup_reminder, name='toggle_backup'),
 ]
