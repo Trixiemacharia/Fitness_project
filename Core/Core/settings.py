@@ -49,9 +49,9 @@ INSTALLED_APPS = [
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
-LOGIN_URL = 'login'
+LOGIN_URL = 'login_user'
 LOGIN_REDIRECT_URL = 'dashboard'
-LOGOUT_REDIRECT = 'login'
+LOGOUT_REDIRECT = 'login_user'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':(

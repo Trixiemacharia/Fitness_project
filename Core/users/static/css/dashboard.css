@@ -6,7 +6,7 @@
 
 body {
     font-family: 'Poppins', sans-serif;
-    background-color: #f2f2f5; /* soft grey background */
+    background-color: #ffffff; /* soft grey background */
     color: #1c1c1e;
     line-height: 1.4;
 }
@@ -208,39 +208,6 @@ body {
     font-weight: bold;
 }
 
-/* ===== WORKOUT CARDS ===== */
-.card-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.category_card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    justify-content: center;
-    background-color: #fff;
-    border-radius: 18px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.08);
-    padding: 20px;
-    height: 120px;
-    cursor: pointer;
-    text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.category_card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.12);
-}
-
-.category_card span {
-    font-weight: 600;
-    font-size: 16px;
-}
-
 /* ===== BOTTOM NAV ===== */
 .bottom-tab {
     position: fixed;
@@ -281,13 +248,5 @@ body {
     .chip {
         padding: 6px 12px;
         font-size: 14px;
-    }
-
-    .category_card {
-        padding: 15px;
-    }
-
-    .category_card .icon {
-        font-size: 28px;
     }
 }

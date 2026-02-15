@@ -26,3 +26,7 @@ def workout_library(request, category):
 def workout_detail(request, id):
     exercise = get_object_or_404(Exercise, id=id)
     return render(request, "exercises/workout_detail.html", {"exercise": exercise})
+
+def categories_view(request):
+    categories = Category.objects.all()
+    return render(request,"exercises/category_cards.html",{"categories":categories})

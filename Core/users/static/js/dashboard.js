@@ -46,19 +46,25 @@ searchInput.addEventListener('input', () => {
                     return;
                 }
 
-                data.results.forEach(card => {
+                data.results.forEach(cat => {
                     const div = document.createElement('div');
                     div.classList.add('category_card');
-                    div.dataset.level = card.level;
+                    div.classList.add(cat.name.toLowerCase());
 
                     div.onclick = () => {
-                        window.location.href = `/exercises/${card.slug}/`;
+                        window.location.href = `/exercises/category${cat.id}/`;
                     };
 
                     div.innerHTML = `
-                        <div class="icon">${card.icon || ''}</div>
-                        <span>${card.title}</span>
-                    `;
+    <div class="card-left">
+        <h3>${cat.name}</h3>
+        <p>${cat.total_programs} Workout Programs</p>
+    </div>
+    <div class="card-right">
+        <img src="${cat.image}" alt="${cat.name}">
+    </div>
+`;
+
 
                     cardContainer.appendChild(div);
                 });

@@ -1,15 +1,32 @@
-<div class="card-container">
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Workout Categories</title>
+    <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+</head>
+<body>
 
-{% for card in workout_cards %}
-    <div class="category_card"
-         onclick="window.location.href='/exercises/{{ card.slug }}/'">
+<div class="container">
 
-        <div style="font-size:30px;">{{ card.icon }}</div>
-        <span>{{ card.title }}</span>
+    {% for category in categories %}
+    <div class="category-card {{ category.name|lower }}"
+         onclick="goToCategory('{{ category.id }}')">
+
+        <div class="card-left">
+            <h2>{{ category.name }}</h2>
+            <p>{{ category.total_programs }} Workout Programs</p>
+        </div>
+
+        <div class="card-right">
+            <img src="{{ category.image.url }}" alt="{{ category.name }}">
+        </div>
 
     </div>
-{% empty %}
-    <p>No workouts available yet.</p>
-{% endfor %}
+    {% endfor %}
 
 </div>
+
+<script src="{% static 'js/categories.js' %}"></script>
+</body>
+</html>
