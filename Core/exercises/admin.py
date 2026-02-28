@@ -22,11 +22,17 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Exercise)
 class ExerciseAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'category')
+    list_display = ('id', 'name', 'category','level','sets','reps','weight','rest_time')
     search_fields = ('name',)
-    list_filter = ('category',)
+    list_filter = ('category','level')
     fieldsets = (
-        (None, {
-            'fields' : ('category', 'name', 'description', 'demo_video')
+        ('Exercise Info', {
+            'fields' : ('category', 'name', 'description', 'image','duration')
+        }),
+        ('Workout Details',{
+            'fields':('level','sets','reps','weight','rest_time')
+        }),
+        ('Demo Video',{
+            'fields': ('demo_video',)
         }),
     )

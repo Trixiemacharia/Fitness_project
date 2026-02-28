@@ -66,16 +66,18 @@
         </div>
 
         <!-- WORKOUT CARDS -->
-        <section class="card-container">
+        <section class="card-container" id="dashboard">
             {% for category in categories %}
-            <div class="category-card {{category.name|lower }}" onclick="window.location.href='/exercises/category{{ category.id }}/'">
+            <div class="category-card {{category.name|lower }}" data-id="{{ category.id }}">
                 <div class="card-left">
                     <h3>{{ category.name }}</h3>
-                    <p>{{ category.total_programs }} Workout Programs</p>
+                    <p class="program-count">{{ category.total_programs }} Workout Programs</p>
                 </div>
 
                 <div class="card-right">
+                    {% if category.image %}
                     <img src="{{ category.image.url }}" alt="{{ category.name }}">
+                    {% endif %}
                 </div>
 
                 </div>
@@ -86,6 +88,15 @@
     </div> 
 
 {% include "exercises/bottom_nav.html" %}
+
+<!-- Exercises container -->
+<section id="exercises-section" style="display:none;">
+    <div class="exercises-header">
+    <button class="back-btn" onclick="closeExercises()">Back</button>
+    <h2 id="category-title"></h2>
+    </div>
+    <div id="exercises-list"></div>
+</section>
 
 <script src="{% static 'js/dashboard.js' %}"></script>
 

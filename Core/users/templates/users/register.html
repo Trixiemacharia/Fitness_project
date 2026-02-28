@@ -1,4 +1,5 @@
 {% load static %}
+{% load socialaccount %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -8,7 +9,7 @@
     <body>
         <div class="auth-form">
             <div class="form-container">
-                <h2>Register Here😊</h2>
+                <h2>Sign Up</h2>
                 <form method="POST" action="{% url 'register_user'%}">
                     {% csrf_token %}
                     <input name="username" type="text" placeholder="Username"><br>
@@ -16,7 +17,15 @@
                     <input name="password" type="password" placeholder="Password"><br>
                     <button type="submit">Register</button>
                 </form>
-                <p classs="signup-link" onclick="window.location.href='/login'">Already have an account? <a href="{% url 'login_user' %}">Login</a></p>
+                <div class="divider">
+                    <span>or</span>
+                </div>
+                 <a href="{% provider_login_url 'google' process='register' %}" class="google-btn"> 
+                    <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo">
+                    <span>Sign up with Google<span>
+                 </a>
+
+                <p classs="login-link" onclick="window.location.href='/login'">Already have an account? <a href="{% url 'login_user' %}">Login</a></p>
             </div>
         </div>
     </body>

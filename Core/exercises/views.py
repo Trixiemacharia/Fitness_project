@@ -11,13 +11,20 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class=CategorySerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 class ExerciseViewSet(viewsets.ModelViewSet):
     queryset = Exercise.objects.all()
     serializer_class = ExerciseSerializer
 
+    def get_serializer_context(self):
+        return {'request': self.request}
+
 # Render HTML templates
-def workout_library(request, category):
-    exercises = Exercise.objects.filter(category_slug=category)
+def workout_library(request, pk):
+    category = get_object_or_404(Category, pk=pk)
+    exercises = Exercise.objects.filter(category=category)
     return render(request, "exercises/workout_library.html", {
         "exercises": exercises,
         "category":category
@@ -29,4 +36,4 @@ def workout_detail(request, id):
 
 def categories_view(request):
     categories = Category.objects.all()
-    return render(request,"exercises/category_cards.html",{"categories":categories})
+    return render(request,"exercises/category_cards.html")

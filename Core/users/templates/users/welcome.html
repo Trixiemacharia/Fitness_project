@@ -1,4 +1,5 @@
 {% load static %}
+{% load socialaccount %}
 <!DOCTYPE html>
 <html>
     <head>
@@ -7,10 +8,12 @@
     </head>
     <body>
         <div id="welcome">
-            <img src="{% static 'images/fitness.jpg' %}" alt="fitness background">
-            <h1>Welcome to FitVibes 😁💪</h1>
+            <div class="welcome-content">
+            <h1>Welcome to FitTrack</h1>
             <p>Get ready to start your fitness journey and become the strongest version of yourself</p>
         </div>
+        </div>
+        
         <!--LOGIN SECTION-->
         <div id="login-form">
     <div class="form-container">
@@ -19,8 +22,16 @@
             {% csrf_token %}
             <input type="text" name="username" placeholder="Username" required><br>
             <input type='password' name="password" placeholder="Password" required><br>
-            <button type="submit">Login</button>
+            <button type="submit">Continue</button>
         </form>
+        <div class="divider">
+            <span>or</span>
+        </div>
+        <a href="{% provider_login_url 'google' process='login' %}" class="google-btn"> 
+         <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo">
+         <span>Continue with Google<span>
+         </a>
+         
         <a href="#">Forgot password?</a>
         <p class="signup-link">Don't have an account? <a href="{% url 'register_user' %}">Sign Up</a></p>
         </div>

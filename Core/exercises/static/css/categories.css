@@ -14,11 +14,11 @@ body {
     margin: 40px auto;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* spacing between cards */
+    gap: 20px;
     padding: 0 20px;
 }
 
-/* CARD BASE */
+/* ===== CATEGORY CARDS ===== */
 .category-card {
     display: flex;
     justify-content: space-between;
@@ -28,62 +28,311 @@ body {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     transition: all 0.3s ease;
+    gap: 16px;
 }
 
-/* HOVER */
 .category-card:hover {
     transform: translateY(-6px);
     box-shadow: 0 18px 35px rgba(0, 0, 0, 0.08);
 }
 
-/* LEFT SIDE */
-.card-left h2 {
-    font-size: 22px;
+.card-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+    gap: 6px;
+}
+
+.card-left h2,
+.card-left h3 {
+    font-size: 20px;
     font-weight: 700;
     color: #1E293B;
-    margin-bottom: 6px;
+    margin: 0;
 }
 
-.card-left p {
-    font-size: 14px;
+.card-left .program-count {
+    font-size: 13px;
     color: #64748B;
+    margin: 0;
 }
 
-/* RIGHT SIDE IMAGE */
+.card-left .card-desc {
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-right {
+    flex-shrink: 0;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .card-right img {
-    height: 95px;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 
 /* ===== GRADIENTS ===== */
+.strength { background: linear-gradient(135deg, #DCEEFF, #B8DBFF); }
+.cardio   { background: linear-gradient(135deg, #F0E6FF, #E2D4FF); }
+.stretch  { background: linear-gradient(135deg, #FFE6F0, #FFD6E7); }
+.mobility { background: linear-gradient(135deg, #DDF7F4, #C6EFEA); }
 
-/* Strength */
-.strength {
-    background: linear-gradient(135deg, #DCEEFF, #B8DBFF);
+/* ===== DASHBOARD FILTER CHIPS ===== */
+.search {
+    margin-bottom: 14px;
 }
 
-/* Cardio */
-.cardio {
-    background: linear-gradient(135deg, #F0E6FF, #E2D4FF);
+.filter-chips {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    background: #f1f5f9;
+    border-radius: 30px;
+    padding: 5px;
+    width: fit-content;
 }
 
-/* Stretch */
-.stretch {
-    background: linear-gradient(135deg, #FFE6F0, #FFD6E7);
+.chip {
+    padding: 9px 22px;
+    border-radius: 25px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    transition: all 0.25s ease;
+    border: none;
+    letter-spacing: 0.2px;
+    font-family: 'Poppins', sans-serif;
 }
 
-/* Mobility */
-.mobility {
-    background: linear-gradient(135deg, #DDF7F4, #C6EFEA);
+.chip:hover {
+    color: #1E293B;
 }
 
-/* RESPONSIVE */
-@media (max-width: 480px) {
-    .card-left h2 {
-        font-size: 18px;
+.chip.selected {
+    background: #1E293B;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(30, 41, 59, 0.25);
+}
+
+/* ===== EXERCISE CARDS ===== */
+.exercise-card {
+    background: #ffffff;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.07);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.exercise-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.1);
+}
+
+.exercise-card-inner {
+    display: flex;
+    align-items: stretch;
+}
+
+.exercise-video-side {
+    flex-shrink: 0;
+    width: 160px;
+    min-height: 180px;
+    background: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.exercise-video-side video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.exercise-img-side {
+    flex-shrink: 0;
+    width: 160px;
+    min-height: 180px;
+}
+
+.exercise-img-side img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.exercise-body {
+    flex: 1;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exercise-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1E293B;
+    margin: 0;
+}
+
+/* ===== STATS GRID ===== */
+.exercise-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.stat-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1E293B;
+    text-align: center;
+}
+
+/* Level badge above exercise name */
+.level-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    width: fit-content;
+}
+
+.level-badge.beginner     { background: #dcfce7; color: #166534; }
+.level-badge.intermediate { background: #fef9c3; color: #854d0e; }
+.level-badge.advanced     { background: #fee2e2; color: #991b1b; }
+
+.exercise-desc {
+    font-size: 13px;
+    color: #64748B;
+    line-height: 1.5;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ===== MISC ===== */
+.empty-msg {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 15px;
+    padding: 40px 0;
+}
+
+#exercises-section {
+    max-width: 640px;
+    margin: 40px auto;
+    padding: 0 20px 100px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== EXERCISES HEADER & ARROW BACK BUTTON ===== */
+.exercises-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-top: 8px;
+}
+
+.exercises-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1E293B;
+    margin: 0;
+}
+
+/* Arrow back button — replaces the old "Back" text button */
+.back-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    flex-shrink: 0;
+}
+
+.back-btn:hover {
+    background: #e2e8f0;
+    transform: translateX(-2px);
+}
+
+/* Arrow drawn with CSS — no icon library needed */
+.back-btn::before {
+    content: '';
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-left: 2.5px solid #1E293B;
+    border-bottom: 2.5px solid #1E293B;
+    transform: rotate(45deg) translateX(2px);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 520px) {
+    .exercise-video-side,
+    .exercise-img-side {
+        width: 120px;
+        min-height: 150px;
     }
 
-    .card-right img {
-        height: 75px;
+    .card-left h2,
+    .card-left h3 {
+        font-size: 17px;
+    }
+
+    .card-right {
+        width: 80px;
+        height: 80px;
     }
 }
