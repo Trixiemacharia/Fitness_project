@@ -1,104 +1,139 @@
 {% load static %}
 <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+</head>
 
-<html>
-    <head>
-        <title>Dashboard</title>
-            <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-            <link rel="stylesheet" href="{% static 'css/categories.css' %}">
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=search" />
-    </head>
-    <body>
-        <div class="profile-avatar-btn" id="avatarBtn">
-                {% if profile.profile_image %}
-                <img src="{{ profile.profile_image.url }}" alt="Avatar">
-                {% else %}
-                <span>{{ profile.name|slice:":1"|upper }}</span>
-                {% endif %}
-            </div>
+<body data-fitness-level="{{ profile.fitness_level }}">
 
-                 <!-- PROFILE PANEL -->
-<div class="profile-panel" id="profilePanel">
+<!-- ═══════════════════ AVATAR ═══════════════════ -->
+<button id="avatarBtn" aria-label="Profile menu">
+    {% if profile.profile_image %}
+        <img src="{{ profile.profile_image.url }}" alt="Avatar">
+    {% else %}
+        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#a0a0a0;">
+            {{ profile.name|slice:":1"|upper }}
+        </span>
+    {% endif %}
+</button>
 
-    <div class="profile-header">
-        <strong>{{ profile.name }}</strong>
-        <small>{{ request.user.email }}</small>
+<!-- ═══════════════════ PROFILE PANEL ═══════════════════ -->
+<div id="profilePanel">
+    <div style="padding:10px 14px 14px;border-bottom:1px solid #2a2a2a;margin-bottom:8px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff;">{{ profile.name }}</div>
+        <div style="font-size:12px;color:#a0a0a0;margin-top:2px;">{{ request.user.email }}</div>
     </div>
-
-    <button class="panel-btn" id="uploadPhotoBtn">Change Profile Picture</button>
-    <!--backup reminder toggle button-->
-    <div class="toggle-row">
-        <span>Backup reminder</span>
-        <label class="switch">
-            <input type="checkbox" id="backupToggle"
-            {% if profile.backup_reminder %}checked{% endif %}>
+    <button id="uploadPhotoBtn">📷 Change Photo</button>
+    <div style="padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:14px;color:#f0f0f0;">Backup Reminder</span>
+        <label class="switch" style="margin:0;">
+            <input type="checkbox" id="backupToggle" {% if profile.backup_reminder %}checked{% endif %}>
             <span class="slider"></span>
         </label>
     </div>
-
-    <hr>
-
-    <button class="panel-btn danger" id="logoutBtn">Sign Out</button>
-    <button class="panel-btn danger" id="deleteBtn">Delete Account</button>
-    </div>
-
-<!-- HIDDEN FILE INPUT -->
+    <button id="logoutBtn">🚪 Sign Out</button>
+    <button id="deleteBtn" class="danger">🗑 Delete Account</button>
+</div>
 <input type="file" id="profileImageInput" accept="image/*" hidden>
 
-       <!--DASHBOARD CONTENT-->
-        <div class="dashboard">
-             <header class="dashboard-header">
-            <div class="hamburger">&#9776;</div>
-            <h2>Welcome, {{ profile.name }}!</h2>
-        </header>
 
-        <!-- SEARCH BAR -->
-        <div class="search">
-            <span class="search-icon material-symbols-outlined">search</span>
-            <input class="search-input" type="search" id="search-workout" placeholder="Search workout" autocomplete="off">
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<div id="dashboard">
+
+    <div class="dashboard-header">
+        <h1>My <span>Workouts</span></h1>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search-workout" placeholder="Search workouts..." autocomplete="off">
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+
+        <div class="filter-row">
+            <span class="filter-label">Level</span>
+            <div class="chip-row">
+                <button class="chip {% if profile.fitness_level == 'beginner' %}selected{% endif %}" data-level="beginner">Beginner</button>
+                <button class="chip {% if profile.fitness_level == 'intermediate' %}selected{% endif %}" data-level="intermediate">Intermediate</button>
+                <button class="chip {% if profile.fitness_level == 'advanced' %}selected{% endif %}" data-level="advanced">Advanced</button>
+            </div>
         </div>
 
-        <!-- FILTER CHIPS -->
-        <div class="filter-chips">
-            <div class="chip {% if profile.fitness_level == 'beginner' %}selected{% endif %}" data-level="beginner">Beginner</div>
-            <div class="chip {% if profile.fitness_level == 'intermediate' %}selected{% endif %}" data-level="intermediate">Intermediate</div>
-            <div class="chip {% if profile.fitness_level == 'advanced' %}selected{% endif %}" data-level="advanced">Advanced</div>
+        <div class="filter-row">
+            <span class="filter-label">Training Type</span>
+            <div class="chip-row">
+                <button class="chip selected" data-type="all">All</button>
+                <button class="chip" data-type="strength">Strength</button>
+                <button class="chip" data-type="hiit">HIIT</button>
+                <button class="chip" data-type="cardio">Cardio</button>
+                <button class="chip" data-type="mobility">Mobility</button>
+            </div>
         </div>
 
-        <!-- WORKOUT CARDS -->
-        <section class="card-container" id="dashboard">
-            {% for category in categories %}
-            <div class="category-card {{category.name|lower }}" data-id="{{ category.id }}">
-                <div class="card-left">
-                    <h3>{{ category.name }}</h3>
-                    <p class="program-count">{{ category.total_programs }} Workout Programs</p>
-                </div>
+        <div class="filter-row">
+            <span class="filter-label">Muscle Focus</span>
+            <div class="chip-row" id="muscle-chip-row"></div>
+        </div>
 
-                <div class="card-right">
-                    {% if category.image %}
-                    <img src="{{ category.image.url }}" alt="{{ category.name }}">
-                    {% endif %}
-                </div>
+    </div>
 
-                </div>
-                {% empty %}
-                <p>No workouts available yet.</p>
-                {% endfor %}
-        </section>
-    </div> 
+    <p class="section-label">Categories</p>
 
-{% include "exercises/bottom_nav.html" %}
+    <div class="card-container">
+        {% for category in categories %}
+        <div class="category-card {{ category.training_type }}" data-id="{{ category.id }}">
+            <div class="card-left">
+                <span class="card-type-tag">{{ category.training_type|upper }}</span>
+                <h3>{{ category.name }}</h3>
+                <p class="program-count">Loading...</p>
+            </div>
+            {% if category.image %}
+            <div class="card-right">
+                <img src="{{ category.image.url }}" alt="{{ category.name }}">
+            </div>
+            {% endif %}
+            <span class="card-number">0{{ forloop.counter }}</span>
+        </div>
+        {% empty %}
+        <div class="empty-state"><p class="empty-msg">No categories yet</p></div>
+        {% endfor %}
+    </div>
 
-<!-- Exercises container -->
-<section id="exercises-section" style="display:none;">
+</div><!-- /#dashboard -->
+
+
+<!-- ═══════════════════ EXERCISES LIST ═══════════════════ -->
+<div id="exercises-section" style="display:none;">
     <div class="exercises-header">
-    <button class="back-btn" onclick="closeExercises()">Back</button>
-    <h2 id="category-title"></h2>
+        <button class="back-btn" onclick="closeExercises()" aria-label="Go back"></button>
+        <h2 id="category-title">Exercises</h2>
+        <span class="level-tag" id="level-tag">Beginner</span>
     </div>
     <div id="exercises-list"></div>
-</section>
+</div>
+
+
+<!-- ═══════════════════ EXERCISE DETAIL ═══════════════════ -->
+<!-- JS renders the full content here when a card is tapped -->
+<div id="exercise-detail-section" style="display:none;"></div>
+
+
+<!-- ═══════════════════ BOTTOM NAV ═══════════════════ -->
+{% include "exercises/bottom_nav.html" %}
 
 <script src="{% static 'js/dashboard.js' %}"></script>
-
 </body>
 </html>

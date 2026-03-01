@@ -4,6 +4,8 @@ from .forms import OnboardingForm
 from django.contrib.auth.decorators import login_required
 from exercises.models import Category, Exercise
 from django.http import JsonResponse
+from django.db.models import Q
+from exercises.serializers import CategorySerializer
 
 @login_required
 def create_profile(request):
@@ -60,23 +62,18 @@ def dashboard(request):
 
 @login_required
 def search_dashboard_workouts(request):
-    query = request.GET.get('q', '').lower()
+    query = request.GET.get('q', '').strip()
 
-    categories = Category.objects.filter(
-        name__icontains=query
-    )
+    if not query:
+        categories = Category.objects.prefetch_related('exercises', 'muscle_groups').all()
+    else:
+        categories = Category.objects.prefetch_related('exercises', 'muscle_groups').filter(
+            Q(name__icontains=query) |
+            Q(exercises__name__icontains=query)
+        ).distinct()
 
-    results = [
-        {
-            "id": cat.id,
-            "name" : cat.name,
-            "image" : cat.image.url,
-            "total_programs": cat.total_programs
-        }
-        for cat in categories
-
-    ]
-    return JsonResponse({"results": results})
+    serializer = CategorySerializer(categories, many=True, context={'request': request})
+    return JsonResponse({'results': serializer.data})
 
 @login_required
 def upload_profile_image(request):
