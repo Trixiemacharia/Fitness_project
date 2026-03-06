@@ -1,0 +1,340 @@
+/* ═══════════════════════════════════════════════════
+   PROGRESS SCREEN
+═══════════════════════════════════════════════════ */
+
+/* Stat cards row */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-card-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--grey-2);
+}
+
+.stat-card-value {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1;
+}
+
+.stat-card-sub {
+  font-size: 12px;
+  color: var(--grey-2);
+}
+
+.stat-card.accent-card {
+  background: rgba(200, 241, 53, 0.08);
+  border-color: rgba(200, 241, 53, 0.2);
+}
+
+.stat-card.accent-card .stat-card-value {
+  color: var(--accent);
+}
+
+/* Section blocks */
+.progress-section {
+  margin-bottom: 32px;
+}
+
+.progress-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.progress-section-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--grey-2);
+}
+
+.log-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: 100px;
+  color: var(--black);
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--transition);
+}
+
+.log-btn:hover {
+  opacity: 0.85;
+}
+
+/* Chart containers */
+.chart-wrap {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  position: relative;
+}
+
+.chart-wrap canvas {
+  max-height: 200px;
+}
+
+/* Consistency heatmap grid */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 4px;
+}
+
+.heatmap-week {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heatmap-day {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--surface);
+  cursor: default;
+  transition: transform 0.1s;
+}
+
+.heatmap-day.active {
+  background: var(--accent);
+}
+
+.heatmap-day.today {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* Log modal */
+.log-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 300;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.log-modal-overlay.show {
+  display: flex;
+}
+
+.log-modal {
+  background: #141414;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: 24px 20px 40px;
+  width: 100%;
+  max-width: 560px;
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.log-modal-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--white);
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-close {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--grey-2);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Form fields inside modal */
+.log-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--grey-2);
+}
+
+.form-input,
+.form-select {
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 14px;
+  color: var(--white);
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  transition: border-color var(--transition);
+  width: 100%;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-select option {
+  background: var(--card-bg);
+}
+
+.form-submit {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--black);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: opacity var(--transition);
+  margin-top: 6px;
+}
+
+.form-submit:hover { opacity: 0.85; }
+
+/* Photos grid */
+.photos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.photo-card {
+  aspect-ratio: 3/4;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+}
+
+.photo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-card-label {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--white);
+}
+
+.photo-card-label.before  { color: #ff6b6b; }
+.photo-card-label.after   { color: var(--accent); }
+
+.add-photo-btn {
+  aspect-ratio: 3/4;
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--border);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--grey-2);
+  font-family: 'Barlow', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.add-photo-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.add-photo-btn svg {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+}
+
+/* Strength exercise selector */
+.exercise-select-wrap {
+  margin-bottom: 14px;
+}

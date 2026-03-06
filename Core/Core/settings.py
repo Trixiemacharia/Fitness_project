@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     #my apps
     'users',
     'exercises',
+    'nutrition',
     #django socials
     'django.contrib.sites',
     'allauth',

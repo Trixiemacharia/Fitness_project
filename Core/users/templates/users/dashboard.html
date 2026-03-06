@@ -1,31 +1,45 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>FitTrack</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/categories.css' %}">
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/progress.css' %}">
+    <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 
 <body data-fitness-level="{{ profile.fitness_level }}">
 
-<!-- ═══════════════════ AVATAR ═══════════════════ -->
-<button id="avatarBtn" aria-label="Profile menu">
-    {% if profile.profile_image %}
-        <img src="{{ profile.profile_image.url }}" alt="Avatar">
-    {% else %}
-        <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;color:#a0a0a0;">
-            {{ profile.name|slice:":1"|upper }}
-        </span>
-    {% endif %}
-</button>
+<!--NAVBAR-->
+{% include "users/navbar.html" %}
 
-<!-- ═══════════════════ PROFILE PANEL ═══════════════════ -->
+<!--  TOP BAR  -->
+<div class="top-bar">
+    <button id="hamburgerBtn" class="hamburger-btn" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+    <span id="topBarTitle" class="top-bar-title">My <span>Workouts</span></span>
+    <!-- Avatar -->
+    <button id="avatarBtn" aria-label="Profile">
+        {% if profile.profile_image %}
+            <img src="{{ profile.profile_image.url }}" alt="Avatar">
+        {% else %}
+            <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:15px;color:#a0a0a0;">
+                {{ profile.name|slice:":1"|upper }}
+            </span>
+        {% endif %}
+    </button>
+</div>
+
+<!-- PROFILE PANEL -->
 <div id="profilePanel">
     <div style="padding:10px 14px 14px;border-bottom:1px solid #2a2a2a;margin-bottom:8px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:#fff;">{{ profile.name }}</div>
@@ -43,97 +57,600 @@
     <button id="deleteBtn" class="danger">🗑 Delete Account</button>
 </div>
 <input type="file" id="profileImageInput" accept="image/*" hidden>
+<input type="file" id="progressPhotoInput" accept="image/*" hidden>
 
+<!--  MAIN CONTENT -->
+<div class="main-content">
 
-<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
-<div id="dashboard">
+    <!--DASHBOARD SCREEN -->
+    <div id="dashboard-screen" class="spa-screen active">
 
-    <div class="dashboard-header">
-        <h1>My <span>Workouts</span></h1>
-    </div>
+        <div id="dashboard">
+            <div class="dashboard-header" style="margin-bottom:20px;padding-top:8px;">
+                <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;color:#fff;">
+                    Hey, <span style="color:#c8f135;">{{ profile.name|truncatechars:12 }}</span>
+                </h1>
+            </div>
 
-    <!-- Search -->
-    <div class="search-wrap">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" id="search-workout" placeholder="Search workouts..." autocomplete="off">
-    </div>
+            <!-- Search -->
+            <div class="search-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="search-workout" placeholder="Search workouts..." autocomplete="off">
+            </div>
 
-    <!-- Filters -->
-    <div class="filter-section">
+            <!-- Filters -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <span class="filter-label">Level</span>
+                    <div class="chip-row">
+                        <button class="chip {% if profile.fitness_level == 'beginner' %}selected{% endif %}" data-level="beginner">Beginner</button>
+                        <button class="chip {% if profile.fitness_level == 'intermediate' %}selected{% endif %}" data-level="intermediate">Intermediate</button>
+                        <button class="chip {% if profile.fitness_level == 'advanced' %}selected{% endif %}" data-level="advanced">Advanced</button>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <span class="filter-label">Training Type</span>
+                    <div class="chip-row">
+                        <button class="chip selected" data-type="all">All</button>
+                        <button class="chip" data-type="strength">Strength</button>
+                        <button class="chip" data-type="hiit">HIIT</button>
+                        <button class="chip" data-type="cardio">Cardio</button>
+                        <button class="chip" data-type="mobility">Mobility</button>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <span class="filter-label">Muscle Focus</span>
+                    <div class="chip-row" id="muscle-chip-row"></div>
+                </div>
+            </div>
 
-        <div class="filter-row">
-            <span class="filter-label">Level</span>
-            <div class="chip-row">
-                <button class="chip {% if profile.fitness_level == 'beginner' %}selected{% endif %}" data-level="beginner">Beginner</button>
-                <button class="chip {% if profile.fitness_level == 'intermediate' %}selected{% endif %}" data-level="intermediate">Intermediate</button>
-                <button class="chip {% if profile.fitness_level == 'advanced' %}selected{% endif %}" data-level="advanced">Advanced</button>
+            <p class="section-label">Categories</p>
+            <div class="card-container">
+                {% for category in categories %}
+                <div class="category-card {{ category.training_type }}" data-id="{{ category.id }}">
+                    <div class="card-left">
+                        <span class="card-type-tag">{{ category.training_type|upper }}</span>
+                        <h3>{{ category.name }}</h3>
+                        <p class="program-count">Loading...</p>
+                    </div>
+                    {% if category.image %}
+                    <div class="card-right"><img src="{{ category.image.url }}" alt="{{ category.name }}"></div>
+                    {% endif %}
+                    <span class="card-number">0{{ forloop.counter }}</span>
+                </div>
+                {% empty %}
+                <div class="empty-state"><p class="empty-msg">No categories yet</p></div>
+                {% endfor %}
             </div>
         </div>
 
-        <div class="filter-row">
-            <span class="filter-label">Training Type</span>
-            <div class="chip-row">
-                <button class="chip selected" data-type="all">All</button>
-                <button class="chip" data-type="strength">Strength</button>
-                <button class="chip" data-type="hiit">HIIT</button>
-                <button class="chip" data-type="cardio">Cardio</button>
-                <button class="chip" data-type="mobility">Mobility</button>
+        <!-- Exercise list (within dashboard screen) -->
+        <div id="exercises-section" style="display:none;">
+            <div class="exercises-header">
+                <button class="back-btn" onclick="closeExercises()" aria-label="Go back"></button>
+                <h2 id="category-title">Exercises</h2>
+                <span class="level-tag" id="level-tag">Beginner</span>
+            </div>
+            <div id="exercises-list"></div>
+        </div>
+
+        <!-- Exercise detail (within dashboard screen) -->
+        <div id="exercise-detail-section" style="display:none;"></div>
+
+    </div><!-- /#dashboard-screen -->
+
+
+    <!--PROGRESS SCREEN-->
+    <div id="progress-screen" class="spa-screen">
+
+        <h2 class="page-title">My <span>Progress</span></h2>
+
+        <!-- Consistency stat cards -->
+        <div class="stat-cards">
+            <div class="stat-card accent-card">
+                <span class="stat-card-label">Current Streak</span>
+                <span class="stat-card-value" id="stat-streak">—</span>
+                <span class="stat-card-sub">days</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-label">Longest Streak</span>
+                <span class="stat-card-value" id="stat-longest">—</span>
+                <span class="stat-card-sub">days</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-label">Total Workouts</span>
+                <span class="stat-card-value" id="stat-total">—</span>
+                <span class="stat-card-sub">sessions</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-label">This Week</span>
+                <span class="stat-card-value" id="stat-this-week">—</span>
+                <span class="stat-card-sub">active days</span>
             </div>
         </div>
 
-        <div class="filter-row">
-            <span class="filter-label">Muscle Focus</span>
-            <div class="chip-row" id="muscle-chip-row"></div>
+        <!-- Consistency heatmap -->
+        <div class="progress-section">
+            <div class="progress-section-header">
+                <span class="progress-section-title">Workout Consistency</span>
+            </div>
+            <div class="chart-wrap">
+                <div id="heatmap-grid" class="heatmap-grid"></div>
+            </div>
         </div>
 
-    </div>
-
-    <p class="section-label">Categories</p>
-
-    <div class="card-container">
-        {% for category in categories %}
-        <div class="category-card {{ category.training_type }}" data-id="{{ category.id }}">
-            <div class="card-left">
-                <span class="card-type-tag">{{ category.training_type|upper }}</span>
-                <h3>{{ category.name }}</h3>
-                <p class="program-count">Loading...</p>
+        <!-- Weight -->
+        <div class="progress-section">
+            <div class="progress-section-header">
+                <span class="progress-section-title">Weight</span>
+                <button class="log-btn" onclick="openLogModal('weight')">+ Log</button>
+            </div>u
+            <div class="chart-wrap">
+                <canvas id="weight-chart"></canvas>
             </div>
-            {% if category.image %}
-            <div class="card-right">
-                <img src="{{ category.image.url }}" alt="{{ category.name }}">
-            </div>
-            {% endif %}
-            <span class="card-number">0{{ forloop.counter }}</span>
         </div>
-        {% empty %}
-        <div class="empty-state"><p class="empty-msg">No categories yet</p></div>
-        {% endfor %}
+
+        <!-- Measurements -->
+        <div class="progress-section">
+            <div class="progress-section-header">
+                <span class="progress-section-title">Body Measurements</span>
+                <button class="log-btn" onclick="openLogModal('measurement')">+ Log</button>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="measurement-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Strength -->
+        <div class="progress-section">
+            <div class="progress-section-header">
+                <span class="progress-section-title">Strength Gains</span>
+                <button class="log-btn" onclick="openLogModal('strength'); populateStrengthSelect();">+ Log</button>
+            </div>
+            <div class="chart-wrap">
+                <canvas id="strength-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Before / After Photos -->
+        <div class="progress-section">
+            <div class="progress-section-header">
+                <span class="progress-section-title">Progress Photos</span>
+            </div>
+            <div id="photos-grid" class="photos-grid">
+                <button class="add-photo-btn" onclick="openLogModal('photo')">
+                    <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                    Add Photo
+                </button>
+            </div>
+        </div>
+
+    </div><!-- /#progress-screen -->
+
+
+    <!-- PROFILE SCREEN -->
+    <div id="profile-screen" class="spa-screen">
+
+        <h2 class="page-title">My <span>Profile</span></h2>
+
+        <!-- Profile hero -->
+        <div class="profile-hero">
+            <div class="profile-hero-avatar" id="profileHeroAvatar" onclick="document.getElementById('profileImageInput').click()">
+                {% if profile.profile_image %}
+                    <img src="{{ profile.profile_image.url }}" alt="Avatar" id="profileHeroImg">
+                {% else %}
+                    <span class="profile-hero-avatar-initials">{{ profile.name|slice:":1"|upper }}</span>
+                {% endif %}
+            </div>
+            <div class="profile-hero-info">
+                <div class="profile-hero-name">{{ profile.name }}</div>
+                <div class="profile-hero-email">{{ request.user.email }}</div>
+                <span class="profile-hero-level">{{ profile.fitness_level }}</span>
+            </div>
+        </div>
+
+        <!-- Goals -->
+        <div class="settings-section">
+            <div class="settings-section-title">Goals & Preferences</div>
+            <div class="settings-card">
+                <div class="settings-row">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-row-label">Fitness Goal</div>
+                        </div>
+                    </div>
+                    <select id="pref-goal" class="settings-select">
+                        <option value="lose_weight">Lose Weight</option>
+                        <option value="build_muscle">Build Muscle</option>
+                        <option value="stay_active">Stay Active</option>
+                        <option value="improve_endurance">Improve Endurance</option>
+                        <option value="flexibility">Flexibility</option>
+                    </select>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-row-label">Units</div>
+                        </div>
+                    </div>
+                    <select id="pref-units" class="settings-select">
+                        <option value="metric">Metric (kg, cm)</option>
+                        <option value="imperial">Imperial (lbs, in)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preferred workout days -->
+        <div class="settings-section">
+            <div class="settings-section-title">Preferred Workout Days</div>
+            <div class="days-picker">
+                <button class="day-chip" data-day="mon">Mon</button>
+                <button class="day-chip" data-day="tue">Tue</button>
+                <button class="day-chip" data-day="wed">Wed</button>
+                <button class="day-chip" data-day="thu">Thu</button>
+                <button class="day-chip" data-day="fri">Fri</button>
+                <button class="day-chip" data-day="sat">Sat</button>
+                <button class="day-chip" data-day="sun">Sun</button>
+            </div>
+        </div>
+
+        <!-- App settings -->
+        <div class="settings-section">
+            <div class="settings-section-title">App Settings</div>
+            <div class="settings-card">
+                <div class="settings-row">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon">
+                            <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-row-label">Dark Mode</div>
+                            <div class="settings-row-sub">Toggle app theme</div>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="pref-dark-mode" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon">
+                            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-row-label">Notifications</div>
+                            <div class="settings-row-sub">Workout reminders</div>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="pref-notifications" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save button -->
+        <button class="settings-save-btn" onclick="savePreferences()">Save Settings</button>
+
+        <!-- Danger zone -->
+        <div class="settings-section" style="margin-top:32px;">
+            <div class="settings-section-title">Account</div>
+            <div class="settings-card">
+                <div class="settings-row" style="cursor:pointer;" onclick="document.getElementById('logoutBtn').click()">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon">
+                            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        </div>
+                        <div class="settings-row-label">Sign Out</div>
+                    </div>
+                </div>
+                <div class="settings-row danger-row" style="cursor:pointer;" onclick="document.getElementById('deleteBtn').click()">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon">
+                            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                        </div>
+                        <div class="settings-row-label">Delete Account</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-toast" class="settings-toast"></div>
+    </div><!-- /#profile-screen -->
+
+</div><!-- /.main-content -->
+
+
+<!--LOG MODALS-->
+
+<!-- Weight modal -->
+<div id="weight-modal" class="log-modal-overlay" onclick="if(event.target===this)closeLogModal('weight')">
+    <div class="log-modal">
+        <div class="log-modal-title">Log Weight <button class="modal-close" onclick="closeLogModal('weight')">✕</button></div>
+        <form class="log-form" onsubmit="submitWeightLog(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Weight</label>
+                    <input class="form-input" type="number" name="weight" step="0.1" placeholder="70.5" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit</label>
+                    <select class="form-select" name="unit"><option value="kg">kg</option><option value="lbs">lbs</option></select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Date</label>
+                <input class="form-input" type="date" name="date">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Note (optional)</label>
+                <input class="form-input" type="text" name="note" placeholder="e.g. Morning, after workout">
+            </div>
+            <button type="submit" class="form-submit">Log Weight</button>
+        </form>
     </div>
-
-</div><!-- /#dashboard -->
-
-
-<!-- ═══════════════════ EXERCISES LIST ═══════════════════ -->
-<div id="exercises-section" style="display:none;">
-    <div class="exercises-header">
-        <button class="back-btn" onclick="closeExercises()" aria-label="Go back"></button>
-        <h2 id="category-title">Exercises</h2>
-        <span class="level-tag" id="level-tag">Beginner</span>
-    </div>
-    <div id="exercises-list"></div>
 </div>
 
+<!-- Measurement modal -->
+<div id="measurement-modal" class="log-modal-overlay" onclick="if(event.target===this)closeLogModal('measurement')">
+    <div class="log-modal">
+        <div class="log-modal-title">Log Measurements <button class="modal-close" onclick="closeLogModal('measurement')">✕</button></div>
+        <form class="log-form" onsubmit="submitMeasurementLog(event)">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Unit</label>
+                    <select class="form-select" name="unit"><option value="cm">cm</option><option value="inches">inches</option></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input class="form-input" type="date" name="date">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Waist</label><input class="form-input" type="number" name="waist" step="0.1" placeholder="70"></div>
+                <div class="form-group"><label class="form-label">Hips</label><input class="form-input" type="number" name="hips" step="0.1" placeholder="90"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Chest</label><input class="form-input" type="number" name="chest" step="0.1" placeholder="85"></div>
+                <div class="form-group"><label class="form-label">Arms</label><input class="form-input" type="number" name="arms" step="0.1" placeholder="32"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Thighs</label><input class="form-input" type="number" name="thighs" step="0.1" placeholder="55"></div>
+            <button type="submit" class="form-submit">Log Measurements</button>
+        </form>
+    </div>
+</div>
 
-<!-- ═══════════════════ EXERCISE DETAIL ═══════════════════ -->
-<!-- JS renders the full content here when a card is tapped -->
-<div id="exercise-detail-section" style="display:none;"></div>
+<!-- Strength modal -->
+<div id="strength-modal" class="log-modal-overlay" onclick="if(event.target===this)closeLogModal('strength')">
+    <div class="log-modal">
+        <div class="log-modal-title">Log Strength <button class="modal-close" onclick="closeLogModal('strength')">✕</button></div>
+        <form class="log-form" onsubmit="submitStrengthLog(event)">
+            <div class="form-group">
+                <label class="form-label">Exercise</label>
+                <select class="form-select" name="exercise" id="strength-exercise-select" required>
+                    <option value="">Select exercise...</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Weight Lifted</label>
+                    <input class="form-input" type="number" name="weight_lifted" step="0.5" placeholder="50">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Unit</label>
+                    <select class="form-select" name="weight_unit"><option value="kg">kg</option><option value="lbs">lbs</option></select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Reps</label>
+                    <input class="form-input" type="number" name="reps" placeholder="10">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input class="form-input" type="date" name="date">
+                </div>
+            </div>
+            <button type="submit" class="form-submit">Log Strength</button>
+        </form>
+    </div>
+</div>
+
+<!-- Photo modal -->
+<div id="photo-modal" class="log-modal-overlay" onclick="if(event.target===this)closeLogModal('photo')">
+    <div class="log-modal">
+        <div class="log-modal-title">Add Photo <button class="modal-close" onclick="closeLogModal('photo')">✕</button></div>
+        <form class="log-form" onsubmit="submitPhotoUpload(event)" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="form-label">Photo</label>
+                <input class="form-input" type="file" name="image" accept="image/*" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Label</label>
+                    <select class="form-select" name="label">
+                        <option value="before">Before</option>
+                        <option value="progress" selected>Progress</option>
+                        <option value="after">After</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input class="form-input" type="date" name="date">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Note (optional)</label>
+                <input class="form-input" type="text" name="note" placeholder="e.g. Week 4 check-in">
+            </div>
+            <button type="submit" class="form-submit">Upload Photo</button>
+        </form>
+    </div>
+</div>
+
+    
+    <!-- ──────── ABOUT SCREEN ──────── -->
+    <div id="about-screen" class="spa-screen">
+        <h2 class="page-title">About <span>FitTrack</span></h2>
+
+        <!-- App identity card -->
+        <div class="about-hero">
+            <div class="about-logo-mark">FT</div>
+            <div>
+                <div class="about-app-name">FitTrack</div>
+                <div class="about-version">Version 1.0.0</div>
+            </div>
+        </div>
+
+        <!-- Mission -->
+        <div class="about-section">
+            <h3 class="about-section-title">Our Mission</h3>
+            <p class="about-body">
+                FitTrack is built to make structured fitness accessible and motivating for everyone,
+                whether you're just starting out or pushing advanced limits. We believe tracking
+                your progress, understanding your workouts, and staying consistent are the
+                three pillars of lasting fitness results.
+            </p>
+        </div>
+
+        <!-- What you can do -->
+        <div class="about-section">
+            <h3 class="about-section-title">What You Can Do</h3>
+            <div class="about-feature-list">
+                <div class="about-feature">
+                    <div>
+                        <div class="about-feature-label">Exercise Library</div>
+                        <div class="about-feature-sub">80+ exercises across Strength, HIIT, Cardio and Mobility</div>
+                    </div>
+                </div>
+                <div class="about-feature">
+                    <div>
+                        <div class="about-feature-label">Progress Tracking</div>
+                        <div class="about-feature-sub">Log weight, measurements, strength gains and photos over time</div>
+                    </div>
+                </div>
+                <div class="about-feature">
+                    <div>
+                        <div class="about-feature-label">Sets Tracker</div>
+                        <div class="about-feature-sub">Tap through your sets in real time and mark workouts complete</div>
+                    </div>
+                </div>
+                <div class="about-feature">
+                    <div>
+                        <div class="about-feature-label">Consistency Heatmap</div>
+                        <div class="about-feature-sub">See your workout streaks and active days at a glance</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tech stack -->
+        <div class="about-section">
+            <h3 class="about-section-title">Tech Stack</h3>
+            <div class="tech-grid">
+                <div class="tech-badge">Django</div>
+                <div class="tech-badge">Django REST Framework</div>
+                <div class="tech-badge">MySQL</div>
+                <div class="tech-badge">JavaScript</div>
+                <div class="tech-badge">Chart.js</div>
+                <div class="tech-badge">HTML / CSS</div>
+            </div>
+        </div>
+
+        <!-- Version info -->
+        <div class="about-section">
+            <h3 class="about-section-title">Version Info</h3>
+            <div class="settings-card">
+                <div class="settings-row">
+                    <div class="settings-row-label" style="color:var(--grey-2);font-size:13px;">App Version</div>
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent);">1.0.0</span>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-row-label" style="color:var(--grey-2);font-size:13px;">Release</div>
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--white);">March 2026</span>
+                </div>
+                <div class="settings-row">
+                    <div class="settings-row-label" style="color:var(--grey-2);font-size:13px;">Status</div>
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;color:var(--accent);">Beta</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
-<!-- ═══════════════════ BOTTOM NAV ═══════════════════ -->
-{% include "exercises/bottom_nav.html" %}
+    <!-- ──────── CONTACT SCREEN ──────── -->
+    <div id="contact-screen" class="spa-screen">
+        <h2 class="page-title">Get in <span>Touch</span></h2>
 
+        <p class="contact-intro">
+            Have a question,suggestion , or need help with the app?
+            Reach out we're happy to help.
+        </p>
+
+        <!-- Developer card -->
+        <div class="about-section">
+            <h3 class="about-section-title">Developer</h3>
+            <div class="contact-card">
+                <div class="contact-card-avatar">S</div>
+                <div class="contact-card-info">
+                    <div class="contact-card-name">Stacy Gathigia</div>
+                    <div class="contact-card-role">Full Stack Developer · FitTrack</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact methods -->
+        <div class="about-section">
+            <h3 class="about-section-title">Contact</h3>
+            <div class="settings-card">
+                <a class="settings-row contact-row" href="freakyfriday383@gmail.com">
+                    <div class="settings-row-left">
+                        <div class="settings-row-icon">
+                            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        </div>
+                        <div>
+                            <div class="settings-row-label">Email</div>
+                            <div class="settings-row-sub">freakyfriday383@gmail.com</div>
+                        </div>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                </a>
+            </div>
+        </div>
+        
+    <!-- Help section -->
+        <div class="about-section">
+            <h3 class="about-section-title">Need Help?</h3>
+                <div class="help-card">
+                    <div class="help-label">Feature request?</div>
+                    <div class="help-sub">We'd love to hear your ideas. Reach out via email or GitHub.</div>
+                </div>
+                <div class="help-card">
+                    <div class="help-label">Account issue?</div>
+                    <div class="help-sub">Email us directly and we'll sort it out as quickly as possible.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!--SCRIPTS-->
+<script src="{% static 'js/navbar.js' %}"></script>
 <script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/progress.js' %}"></script>
+<script src="{% static 'js/profile.js' %}"></script>
+
 </body>
 </html>
