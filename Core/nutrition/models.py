@@ -1,5 +1,5 @@
 from django.db import models
-from django.cotrib.auth.models import User
+from django.contrib.auth.models import User
 
 CATEGORY_CHOICES = [
     ('staples', 'Staples'),
@@ -19,6 +19,11 @@ MEAL_TYPE_CHOICES = [
 
 
 class FoodItem(models.Model):
+    SOURCE_CHOICES = [
+        ('local','kenyan_food_fixture'),
+        ('usda','USDA'),
+    ]
+
     name = models.CharField(max_length=200)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     serving_unit = models.CharField(max_length=20, default='g')
@@ -31,9 +36,12 @@ class FoodItem(models.Model):
     description = models.TextField(blank=True)
     is_custom = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='local')
+    usda_fdc_id = models.IntegerField(null=True, blank=True)
 
     class Meta:
         ordering = ['name']
+        unique_together=('name','source')
 
     def __str__(self):
         return self.name

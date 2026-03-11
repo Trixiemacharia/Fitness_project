@@ -1,0 +1,802 @@
+[
+  {
+    "model": "nutrition.fooditem",
+    "pk": 1,
+    "fields": {
+      "name": "Ugali (White Maize)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 119,
+      "protein_per_100g": 2.5,
+      "carbs_per_100g": 26.2,
+      "fats_per_100g": 0.4,
+      "fiber_per_100g": 1.8,
+      "description": "Stiff porridge made from white maize flour, a Kenyan staple"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 2,
+    "fields": {
+      "name": "Ugali (Sorghum)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 112,
+      "protein_per_100g": 3.1,
+      "carbs_per_100g": 24.5,
+      "fats_per_100g": 0.6,
+      "fiber_per_100g": 2.5,
+      "description": "Ugali made from sorghum flour, common in Western Kenya"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 3,
+    "fields": {
+      "name": "Sukuma Wiki (Kale)",
+      "category": "vegetables",
+      "serving_unit": "g",
+      "default_serving_size": 100,
+      "calories_per_100g": 49,
+      "protein_per_100g": 4.3,
+      "carbs_per_100g": 8.8,
+      "fats_per_100g": 0.9,
+      "fiber_per_100g": 3.6,
+      "description": "Sautéed kale cooked with onions and tomatoes"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 4,
+    "fields": {
+      "name": "Githeri (Maize & Beans)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 250,
+      "calories_per_100g": 132,
+      "protein_per_100g": 6.8,
+      "carbs_per_100g": 24.2,
+      "fats_per_100g": 1.2,
+      "fiber_per_100g": 5.4,
+      "description": "Boiled maize and beans, a traditional Kenyan dish"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 5,
+    "fields": {
+      "name": "Nyama Choma (Goat)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 231,
+      "protein_per_100g": 27.0,
+      "carbs_per_100g": 0.0,
+      "fats_per_100g": 13.5,
+      "fiber_per_100g": 0.0,
+      "description": "Roasted goat meat, a popular Kenyan barbecue dish"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 6,
+    "fields": {
+      "name": "Nyama Choma (Beef)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 250,
+      "protein_per_100g": 26.0,
+      "carbs_per_100g": 0.0,
+      "fats_per_100g": 16.0,
+      "fiber_per_100g": 0.0,
+      "description": "Roasted beef, Kenyan barbecue style"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 7,
+    "fields": {
+      "name": "Chapati",
+      "category": "staples",
+      "serving_unit": "piece",
+      "default_serving_size": 70,
+      "calories_per_100g": 297,
+      "protein_per_100g": 7.8,
+      "carbs_per_100g": 48.5,
+      "fats_per_100g": 8.2,
+      "fiber_per_100g": 2.1,
+      "description": "Kenyan flatbread made from wheat flour"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 8,
+    "fields": {
+      "name": "Mukimo",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 121,
+      "protein_per_100g": 3.8,
+      "carbs_per_100g": 22.5,
+      "fats_per_100g": 2.1,
+      "fiber_per_100g": 3.2,
+      "description": "Mashed potatoes with peas, corn, and greens — Kikuyu dish"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 9,
+    "fields": {
+      "name": "Matoke (Green Bananas)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 130,
+      "protein_per_100g": 1.5,
+      "carbs_per_100g": 31.0,
+      "fats_per_100g": 0.4,
+      "fiber_per_100g": 2.3,
+      "description": "Boiled or steamed green bananas, common in Western Kenya"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 10,
+    "fields": {
+      "name": "Pilau (Beef)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 300,
+      "calories_per_100g": 168,
+      "protein_per_100g": 9.5,
+      "carbs_per_100g": 22.0,
+      "fats_per_100g": 4.8,
+      "fiber_per_100g": 1.2,
+      "description": "Spiced rice cooked with beef and aromatic spices"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 11,
+    "fields": {
+      "name": "Biryani (Chicken)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 300,
+      "calories_per_100g": 185,
+      "protein_per_100g": 11.2,
+      "carbs_per_100g": 23.5,
+      "fats_per_100g": 5.5,
+      "fiber_per_100g": 1.0,
+      "description": "Coastal Kenyan spiced rice with chicken"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 12,
+    "fields": {
+      "name": "Tilapia (Fried)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 196,
+      "protein_per_100g": 26.0,
+      "carbs_per_100g": 5.5,
+      "fats_per_100g": 8.0,
+      "fiber_per_100g": 0.3,
+      "description": "Pan-fried Nile tilapia, popular in Nyanza region"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 13,
+    "fields": {
+      "name": "Tilapia (Grilled)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 128,
+      "protein_per_100g": 26.2,
+      "carbs_per_100g": 0.0,
+      "fats_per_100g": 2.7,
+      "fiber_per_100g": 0.0,
+      "description": "Grilled Nile tilapia"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 14,
+    "fields": {
+      "name": "Beans (Boiled)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 127,
+      "protein_per_100g": 8.7,
+      "carbs_per_100g": 22.8,
+      "fats_per_100g": 0.5,
+      "fiber_per_100g": 7.4,
+      "description": "Boiled red kidney beans"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 15,
+    "fields": {
+      "name": "Ndengu (Green Grams)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 105,
+      "protein_per_100g": 7.0,
+      "carbs_per_100g": 19.2,
+      "fats_per_100g": 0.4,
+      "fiber_per_100g": 5.1,
+      "description": "Cooked green grams (mung beans), a Kenyan protein staple"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 16,
+    "fields": {
+      "name": "Maharagwe (Red Beans in Coconut)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 152,
+      "protein_per_100g": 7.2,
+      "carbs_per_100g": 19.5,
+      "fats_per_100g": 5.8,
+      "fiber_per_100g": 6.0,
+      "description": "Coastal Kenyan red beans cooked in coconut milk"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 17,
+    "fields": {
+      "name": "Mandazi",
+      "category": "snacks",
+      "serving_unit": "piece",
+      "default_serving_size": 60,
+      "calories_per_100g": 320,
+      "protein_per_100g": 6.5,
+      "carbs_per_100g": 52.0,
+      "fats_per_100g": 9.8,
+      "fiber_per_100g": 1.5,
+      "description": "Deep-fried dough, a popular Kenyan snack/breakfast item"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 18,
+    "fields": {
+      "name": "Samosa (Beef)",
+      "category": "snacks",
+      "serving_unit": "piece",
+      "default_serving_size": 65,
+      "calories_per_100g": 262,
+      "protein_per_100g": 9.5,
+      "carbs_per_100g": 27.0,
+      "fats_per_100g": 13.5,
+      "fiber_per_100g": 1.8,
+      "description": "Fried pastry stuffed with spiced minced beef"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 19,
+    "fields": {
+      "name": "Samosa (Vegetable)",
+      "category": "snacks",
+      "serving_unit": "piece",
+      "default_serving_size": 60,
+      "calories_per_100g": 218,
+      "protein_per_100g": 4.5,
+      "carbs_per_100g": 28.0,
+      "fats_per_100g": 10.5,
+      "fiber_per_100g": 2.5,
+      "description": "Fried pastry stuffed with spiced vegetables"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 20,
+    "fields": {
+      "name": "Bhajia (Potato)",
+      "category": "snacks",
+      "serving_unit": "g",
+      "default_serving_size": 100,
+      "calories_per_100g": 245,
+      "protein_per_100g": 4.2,
+      "carbs_per_100g": 28.5,
+      "fats_per_100g": 13.0,
+      "fiber_per_100g": 2.0,
+      "description": "Spiced potato fritters, a popular Kenyan street food"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 21,
+    "fields": {
+      "name": "Roasted Maize (Mahindi Choma)",
+      "category": "snacks",
+      "serving_unit": "piece",
+      "default_serving_size": 120,
+      "calories_per_100g": 130,
+      "protein_per_100g": 4.0,
+      "carbs_per_100g": 27.5,
+      "fats_per_100g": 1.8,
+      "fiber_per_100g": 3.0,
+      "description": "Charcoal-roasted corn on the cob, popular street food"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 22,
+    "fields": {
+      "name": "Groundnuts (Roasted)",
+      "category": "snacks",
+      "serving_unit": "g",
+      "default_serving_size": 30,
+      "calories_per_100g": 587,
+      "protein_per_100g": 25.8,
+      "carbs_per_100g": 16.1,
+      "fats_per_100g": 49.7,
+      "fiber_per_100g": 8.5,
+      "description": "Roasted peanuts, a common Kenyan snack"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 23,
+    "fields": {
+      "name": "Uji (Fermented Porridge)",
+      "category": "drinks",
+      "serving_unit": "ml",
+      "default_serving_size": 300,
+      "calories_per_100g": 52,
+      "protein_per_100g": 1.8,
+      "carbs_per_100g": 11.0,
+      "fats_per_100g": 0.5,
+      "fiber_per_100g": 0.8,
+      "description": "Traditional Kenyan fermented grain porridge"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 24,
+    "fields": {
+      "name": "Chai (Kenyan Milk Tea)",
+      "category": "drinks",
+      "serving_unit": "ml",
+      "default_serving_size": 250,
+      "calories_per_100g": 47,
+      "protein_per_100g": 1.7,
+      "carbs_per_100g": 6.5,
+      "fats_per_100g": 1.8,
+      "fiber_per_100g": 0.0,
+      "description": "Kenyan spiced tea boiled with milk and sugar"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 25,
+    "fields": {
+      "name": "Mala (Fermented Milk)",
+      "category": "drinks",
+      "serving_unit": "ml",
+      "default_serving_size": 250,
+      "calories_per_100g": 61,
+      "protein_per_100g": 3.5,
+      "carbs_per_100g": 4.7,
+      "fats_per_100g": 3.3,
+      "fiber_per_100g": 0.0,
+      "description": "Kenyan fermented sour milk, similar to yogurt"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 26,
+    "fields": {
+      "name": "Avocado",
+      "category": "fruits",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 160,
+      "protein_per_100g": 2.0,
+      "carbs_per_100g": 8.5,
+      "fats_per_100g": 14.7,
+      "fiber_per_100g": 6.7,
+      "description": "Fresh Kenyan avocado, grown abundantly in Central Kenya"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 27,
+    "fields": {
+      "name": "Mango",
+      "category": "fruits",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 60,
+      "protein_per_100g": 0.8,
+      "carbs_per_100g": 15.0,
+      "fats_per_100g": 0.4,
+      "fiber_per_100g": 1.6,
+      "description": "Fresh Kenyan mango"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 28,
+    "fields": {
+      "name": "Banana",
+      "category": "fruits",
+      "serving_unit": "piece",
+      "default_serving_size": 120,
+      "calories_per_100g": 89,
+      "protein_per_100g": 1.1,
+      "carbs_per_100g": 23.0,
+      "fats_per_100g": 0.3,
+      "fiber_per_100g": 2.6,
+      "description": "Fresh banana"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 29,
+    "fields": {
+      "name": "Pawpaw (Papaya)",
+      "category": "fruits",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 43,
+      "protein_per_100g": 0.5,
+      "carbs_per_100g": 10.8,
+      "fats_per_100g": 0.3,
+      "fiber_per_100g": 1.7,
+      "description": "Fresh papaya, widely grown in Kenya"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 30,
+    "fields": {
+      "name": "Passion Fruit",
+      "category": "fruits",
+      "serving_unit": "piece",
+      "default_serving_size": 50,
+      "calories_per_100g": 97,
+      "protein_per_100g": 2.2,
+      "carbs_per_100g": 23.4,
+      "fats_per_100g": 0.7,
+      "fiber_per_100g": 10.4,
+      "description": "Fresh passion fruit, popular in Kenya"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 31,
+    "fields": {
+      "name": "Beef Stew (Mchuzi wa Nyama)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 142,
+      "protein_per_100g": 14.5,
+      "carbs_per_100g": 6.8,
+      "fats_per_100g": 6.8,
+      "fiber_per_100g": 1.2,
+      "description": "Kenyan beef stew cooked with tomatoes and onions"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 32,
+    "fields": {
+      "name": "Chicken Stew (Mchuzi wa Kuku)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 135,
+      "protein_per_100g": 16.8,
+      "carbs_per_100g": 5.5,
+      "fats_per_100g": 5.8,
+      "fiber_per_100g": 1.0,
+      "description": "Kenyan chicken stew with tomatoes, onions and spices"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 33,
+    "fields": {
+      "name": "Eggs (Boiled)",
+      "category": "proteins",
+      "serving_unit": "piece",
+      "default_serving_size": 55,
+      "calories_per_100g": 155,
+      "protein_per_100g": 13.0,
+      "carbs_per_100g": 1.1,
+      "fats_per_100g": 10.6,
+      "fiber_per_100g": 0.0,
+      "description": "Hard or soft boiled egg"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 34,
+    "fields": {
+      "name": "Eggs (Fried)",
+      "category": "proteins",
+      "serving_unit": "piece",
+      "default_serving_size": 60,
+      "calories_per_100g": 196,
+      "protein_per_100g": 13.6,
+      "carbs_per_100g": 0.4,
+      "fats_per_100g": 14.8,
+      "fiber_per_100g": 0.0,
+      "description": "Pan-fried egg"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 35,
+    "fields": {
+      "name": "Spinach (Mchicha)",
+      "category": "vegetables",
+      "serving_unit": "g",
+      "default_serving_size": 100,
+      "calories_per_100g": 42,
+      "protein_per_100g": 3.5,
+      "carbs_per_100g": 6.4,
+      "fats_per_100g": 0.8,
+      "fiber_per_100g": 2.8,
+      "description": "Sautéed African spinach (amaranth leaves)"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 36,
+    "fields": {
+      "name": "Cabbage (Cooked)",
+      "category": "vegetables",
+      "serving_unit": "g",
+      "default_serving_size": 100,
+      "calories_per_100g": 38,
+      "protein_per_100g": 1.8,
+      "carbs_per_100g": 7.5,
+      "fats_per_100g": 0.5,
+      "fiber_per_100g": 2.5,
+      "description": "Cooked/stir-fried cabbage"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 37,
+    "fields": {
+      "name": "Managu (African Nightshade)",
+      "category": "vegetables",
+      "serving_unit": "g",
+      "default_serving_size": 100,
+      "calories_per_100g": 44,
+      "protein_per_100g": 4.8,
+      "carbs_per_100g": 7.2,
+      "fats_per_100g": 0.6,
+      "fiber_per_100g": 3.5,
+      "description": "Cooked African nightshade leaves, rich in iron"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 38,
+    "fields": {
+      "name": "Terere (Amaranth Greens)",
+      "category": "vegetables",
+      "serving_unit": "g",
+      "default_serving_size": 100,
+      "calories_per_100g": 40,
+      "protein_per_100g": 4.0,
+      "carbs_per_100g": 6.5,
+      "fats_per_100g": 0.5,
+      "fiber_per_100g": 4.0,
+      "description": "Cooked amaranth greens, traditional Kenyan vegetable"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 39,
+    "fields": {
+      "name": "Sweet Potato (Boiled)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 86,
+      "protein_per_100g": 1.6,
+      "carbs_per_100g": 20.1,
+      "fats_per_100g": 0.1,
+      "fiber_per_100g": 3.0,
+      "description": "Boiled sweet potato"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 40,
+    "fields": {
+      "name": "Potato (Boiled)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 77,
+      "protein_per_100g": 2.0,
+      "carbs_per_100g": 17.5,
+      "fats_per_100g": 0.1,
+      "fiber_per_100g": 2.2,
+      "description": "Plain boiled potato"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 41,
+    "fields": {
+      "name": "White Rice (Cooked)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 130,
+      "protein_per_100g": 2.7,
+      "carbs_per_100g": 28.2,
+      "fats_per_100g": 0.3,
+      "fiber_per_100g": 0.4,
+      "description": "Plain cooked white rice"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 42,
+    "fields": {
+      "name": "Githeri with Potatoes",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 300,
+      "calories_per_100g": 128,
+      "protein_per_100g": 5.8,
+      "carbs_per_100g": 23.5,
+      "fats_per_100g": 1.5,
+      "fiber_per_100g": 4.8,
+      "description": "Githeri stew with potatoes added"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 43,
+    "fields": {
+      "name": "Mutura (Blood Sausage)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 100,
+      "calories_per_100g": 215,
+      "protein_per_100g": 14.0,
+      "carbs_per_100g": 8.5,
+      "fats_per_100g": 14.5,
+      "fiber_per_100g": 0.8,
+      "description": "Traditional Kenyan sausage made from goat intestines and blood"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 44,
+    "fields": {
+      "name": "Wali wa Nazi (Coconut Rice)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 200,
+      "calories_per_100g": 175,
+      "protein_per_100g": 3.0,
+      "carbs_per_100g": 28.0,
+      "fats_per_100g": 5.8,
+      "fiber_per_100g": 0.8,
+      "description": "Coastal Kenyan rice cooked in coconut milk"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 45,
+    "fields": {
+      "name": "Whole Milk (Fresh)",
+      "category": "drinks",
+      "serving_unit": "ml",
+      "default_serving_size": 250,
+      "calories_per_100g": 61,
+      "protein_per_100g": 3.2,
+      "carbs_per_100g": 4.8,
+      "fats_per_100g": 3.3,
+      "fiber_per_100g": 0.0,
+      "description": "Fresh whole cow's milk"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 46,
+    "fields": {
+      "name": "Liver (Beef, Fried)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 120,
+      "calories_per_100g": 191,
+      "protein_per_100g": 29.1,
+      "carbs_per_100g": 5.1,
+      "fats_per_100g": 5.5,
+      "fiber_per_100g": 0.0,
+      "description": "Fried beef liver (ini), a popular Kenyan protein source"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 47,
+    "fields": {
+      "name": "Dengu (Lentils)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 116,
+      "protein_per_100g": 9.0,
+      "carbs_per_100g": 20.1,
+      "fats_per_100g": 0.4,
+      "fiber_per_100g": 7.9,
+      "description": "Cooked brown lentils"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 48,
+    "fields": {
+      "name": "Cassava (Boiled)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 160,
+      "protein_per_100g": 1.4,
+      "carbs_per_100g": 38.1,
+      "fats_per_100g": 0.3,
+      "fiber_per_100g": 1.8,
+      "description": "Boiled cassava (muhogo), common in coastal Kenya"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 49,
+    "fields": {
+      "name": "Arrow Roots (Nduma)",
+      "category": "staples",
+      "serving_unit": "g",
+      "default_serving_size": 150,
+      "calories_per_100g": 112,
+      "protein_per_100g": 1.5,
+      "carbs_per_100g": 26.5,
+      "fats_per_100g": 0.2,
+      "fiber_per_100g": 3.0,
+      "description": "Boiled arrowroots, popular Kenyan breakfast food"
+    }
+  },
+  {
+    "model": "nutrition.fooditem",
+    "pk": 50,
+    "fields": {
+      "name": "Omena (Silver Cyprinid Fish)",
+      "category": "proteins",
+      "serving_unit": "g",
+      "default_serving_size": 80,
+      "calories_per_100g": 290,
+      "protein_per_100g": 42.0,
+      "carbs_per_100g": 5.5,
+      "fats_per_100g": 10.5,
+      "fiber_per_100g": 0.0,
+      "description": "Small dried lake fish (dagaa), high in protein and calcium"
+    }
+  }
+]

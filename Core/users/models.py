@@ -167,3 +167,60 @@ class ProgressPhoto(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.label} photo on {self.date}"
+    
+class MealPlan(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='meal_plans')
+    name = models.CharField(max_length=100)  # e.g "Week 1 - Lose Weight Plan"
+    goal = models.CharField(max_length=30)
+    target_calories = models.FloatField()
+    target_protein = models.FloatField()
+    target_carbs = models.FloatField()
+    target_fat = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+
+class MealPlanDay(models.Model):
+    DAY_CHOICES = [
+        ('monday', 'Monday'),
+        ('tuesday', 'Tuesday'),
+        ('wednesday', 'Wednesday'),
+        ('thursday', 'Thursday'),
+        ('friday', 'Friday'),
+        ('saturday', 'Saturday'),
+        ('sunday', 'Sunday'),
+    ]
+
+    meal_plan = models.ForeignKey(MealPlan, on_delete=models.CASCADE, related_name='days')
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+
+    def __str__(self):
+        return f"{self.meal_plan.name} - {self.day}"
+
+
+class MealPlanItem(models.Model):
+    MEAL_TYPE_CHOICES = [
+        ('breakfast', 'Breakfast'),
+        ('lunch', 'Lunch'),
+        ('dinner', 'Dinner'),
+        ('snack', 'Snack'),
+    ]
+
+    meal_plan_day = models.ForeignKey(MealPlanDay, on_delete=models.CASCADE, related_name='items')
+    food = models.ForeignKey('nutrition.FoodItem', on_delete=models.CASCADE)
+    meal_type = models.CharField(max_length=20, choices=MEAL_TYPE_CHOICES)
+    quantity = models.FloatField(default=1.0)
+    quantity_unit = models.CharField(max_length=50, default='serving')
+
+    @property
+    def calories(self):
+        return (self.food.calories or 0) * self.quantity
+
+    @property
+    def protein(self):
+        return (self.food.protein or 0) * self.quantity
+
+    def __str__(self):
+        return f"{self.meal_plan_day.day} - {self.meal_type} - {self.food.name}"

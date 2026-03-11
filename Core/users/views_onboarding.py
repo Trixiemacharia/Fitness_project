@@ -93,3 +93,29 @@ def onboarding(request):
 
         return redirect(f"/onboarding/?step={step + 1}")
     return render(request,"users/onboarding.html",{"question":question,"step":step})
+
+@login_required
+def complete_onboarding(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        profile = request.user.profile
+        profile.goal = data.get('goal')
+        profile.activity_level = data.get('activity_level')
+        profile.weight_kg = data.get('weight')
+        profile.height_cm = data.get('height')
+        profile.age = data.get('age')
+        profile.gender = data.get('gender')
+        profile.wants_meal_plan = data.get('wants_meal_plan', False)
+        profile.save()
+
+        # Auto generate meal plan if user opted in
+        if profile.wants_meal_plan:
+            meal_plan = generate_meal_plan(request.user)
+            return JsonResponse({
+                'success': True,
+                'redirect': '/meal-plan/',
+                'message': f'Your {profile.get_goal_display()} meal plan is ready!'
+            })
+
+        return JsonResponse({'success': True, 'redirect': '/dashboard/'})

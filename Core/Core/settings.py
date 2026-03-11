@@ -198,3 +198,6 @@ AWS_S3_ENDPOINT_URL = f"https://{config('CLOUDFLARE_R2_ACCOUNT_ID')}.r2.cloudfla
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "max-age=86400",
 }
+
+USDA_API_KEY = config("USDA_API_KEY")
+USDA_BASE_URL = 'https://api.nal.usda.gov/fdc/v1'

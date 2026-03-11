@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
     <link rel="stylesheet" href="{% static 'css/progress.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
+    <link rel="stylesheet" href="{% static 'css/nutrition.css' %}">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
@@ -228,6 +229,8 @@
         </div>
 
     </div><!-- /#progress-screen -->
+
+    {% include "nutrition/nutrition.html" %}
 
 
     <!-- PROFILE SCREEN -->
@@ -650,6 +653,7 @@
 <script src="{% static 'js/navbar.js' %}"></script>
 <script src="{% static 'js/dashboard.js' %}"></script>
 <script src="{% static 'js/progress.js' %}"></script>
+<script src="{% static 'js/nutrition.js' %}"></script>
 <script src="{% static 'js/profile.js' %}"></script>
 
 </body>

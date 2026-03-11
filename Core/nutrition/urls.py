@@ -9,5 +9,4 @@ urlpatterns = [
     path('api/nutrition/logs/<int:pk>/', views.MealLogDeleteView.as_view(), name='meal-log-delete'),
     path('api/nutrition/summary/', views.daily_summary, name='daily-summary'),
     path('api/nutrition/weekly/', views.weekly_summary, name='weekly-summary'),
-    path('nutrition/', views.nutrition_page, name='nutrition-page'),
 ]

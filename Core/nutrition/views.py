@@ -9,10 +9,7 @@ from .serializers import FoodItemSerializer, MealLogSerializer
 
 
 class FoodSearchView(generics.ListAPIView):
-    """
-    GET /api/nutrition/foods/?q=ugali
-    Searches food items by name, returns matching results.
-    """
+    #Search food items by name, returns matching results.
     serializer_class = FoodItemSerializer
     permission_classes = [IsAuthenticated]
 
@@ -47,9 +44,7 @@ class MealLogListCreateView(generics.ListCreateAPIView):
 
 
 class MealLogDeleteView(generics.DestroyAPIView):
-    """
-    DELETE /api/nutrition/logs/<pk>/
-    """
+    #DELETE /api/nutrition/logs/<pk>/
     serializer_class = MealLogSerializer
     permission_classes = [IsAuthenticated]
 
@@ -60,10 +55,7 @@ class MealLogDeleteView(generics.DestroyAPIView):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def daily_summary(request):
-    """
-    GET /api/nutrition/summary/?date=2024-01-15
-    Returns total macros for the day.
-    """
+    #Return total macros for the day.
     date = request.query_params.get('date', timezone.now().date())
     logs = MealLog.objects.filter(user=request.user, date=date).select_related('food_item')
 
@@ -95,10 +87,7 @@ def daily_summary(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def weekly_summary(request):
-    """
-    GET /api/nutrition/weekly/
-    Returns last 7 days of calorie data for chart.js chart.
-    """
+    #Returns last 7 days of calorie data for chart.js chart.
     from datetime import timedelta, date
     today = timezone.now().date()
     days = []

@@ -37,6 +37,7 @@ const navLinks = document.querySelectorAll('.nav-link');
 const screenTitles = {
     'dashboard-screen': 'My <span>Workouts</span>',
     'progress-screen':  'My <span>Progress</span>',
+    'nutrition-screen': 'My<span>Nutrition</span>',
     'profile-screen':   'My <span>Profile</span>',
     'about-screen':     'About <span>FitTrack</span>',
     'contact-screen':   'Get in <span>Touch</span>',

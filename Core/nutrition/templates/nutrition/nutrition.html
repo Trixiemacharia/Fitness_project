@@ -1,0 +1,151 @@
+<div id="nutrition-screen" class="spa-screen">
+
+    <h2 class="page-title">Nutrition <span>Log</span></h2>
+
+    <!-- DATE NAV -->
+    <div class="nutr-date-nav">
+        <button class="nutr-date-btn" id="nutr-prev-day" type="button">&#8249;</button>
+
+        <label class="nutr-date-label-wrap" for="nutr-date-picker" title="Tap to choose date">
+            <svg class="nutr-cal-icon" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8"  y1="2" x2="8"  y2="6"/>
+                <line x1="3"  y1="10" x2="21" y2="10"/>
+            </svg>
+            <span id="nutr-date-label">Today</span>
+            <!-- The actual date input -->
+            <input type="date" id="nutr-date-picker" class="nutr-hidden-date-input">
+        </label>
+
+        <button class="nutr-date-btn" id="nutr-next-day" type="button">&#8250;</button>
+    </div>
+
+    <!--CALORIE DOUGHNUT-->
+    <div class="nutr-ring-section">
+        <div class="nutr-ring-wrap">
+            <canvas id="nutr-ring-canvas" width="160" height="160"></canvas>
+            <div class="nutr-ring-overlay">
+                <span class="nutr-ring-num" id="nutr-cal-val">0</span>
+                <span class="nutr-ring-sub">kcal</span>
+            </div>
+        </div>
+        <div class="nutr-macro-pills">
+            <div class="nutr-pill prot-pill">
+                <span class="nutr-pill-num" id="nutr-prot-val">0g</span>
+                <span class="nutr-pill-name">Protein</span>
+            </div>
+            <div class="nutr-pill carb-pill">
+                <span class="nutr-pill-num" id="nutr-carb-val">0g</span>
+                <span class="nutr-pill-name">Carbs</span>
+            </div>
+            <div class="nutr-pill fat-pill">
+                <span class="nutr-pill-num" id="nutr-fat-val">0g</span>
+                <span class="nutr-pill-name">Fats</span>
+            </div>
+        </div>
+    </div>
+
+    <!--WATER TRACKER -->
+    <div class="nutr-card">
+        <div class="nutr-card-head">
+            <span class="nutr-card-title">💧 Water Intake</span>
+            <span id="nutr-water-label">0 / 8</span>
+        </div>
+        <div class="nutr-glasses" id="nutr-glasses"></div>
+        <div class="nutr-water-track">
+            <div class="nutr-water-fill" id="nutr-water-fill"></div>
+        </div>
+    </div>
+
+    <!--LOG A MEAL-->
+    <div class="nutr-card">
+        <div class="nutr-card-head">
+            <span class="nutr-card-title">🍽️ Log a Meal</span>
+        </div>
+
+        <!-- Food search -->
+        <div class="nutr-search-wrap">
+            <svg class="nutr-search-ico" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input id="nutr-food-input" type="text" class="nutr-search-box"
+                   placeholder="Search e.g. ugali, tilapia, sukuma wiki…"
+                   autocomplete="off">
+            <div id="nutr-spinner" class="nutr-spinner" style="display:none"></div>
+        </div>
+
+        <!-- Search dropdown -->
+        <div id="nutr-dropdown" class="nutr-dropdown" style="display:none"></div>
+
+        <!-- Selected food chip -->
+        <div id="nutr-food-chip" class="nutr-food-chip" style="display:none">
+            <div class="nutr-chip-top">
+                <span id="nutr-chip-name" class="nutr-chip-name"></span>
+                <button id="nutr-chip-clear" class="nutr-chip-x" type="button">✕</button>
+            </div>
+            <div class="nutr-chip-macros">
+                <span class="nc-cal"  id="nc-cal">—</span>
+                <span class="nc-prot" id="nc-prot">—</span>
+                <span class="nc-carb" id="nc-carb">—</span>
+                <span class="nc-fat"  id="nc-fat">—</span>
+            </div>
+        </div>
+
+        <!-- Meal type -->
+        <div class="nutr-mt-row">
+            <button class="nutr-mt active" data-mt="breakfast" type="button"> Breakfast</button>
+            <button class="nutr-mt" data-mt="lunch"     type="button"> Lunch</button>
+            <button class="nutr-mt" data-mt="dinner"    type="button"> Dinner</button>
+            <button class="nutr-mt" data-mt="snack"     type="button"> Snack</button>
+        </div>
+
+        <!-- Portion + date -->
+        <div class="nutr-fields">
+            <div class="nutr-field">
+                <label class="nutr-field-lbl">Portion (g / ml)</label>
+                <input id="nutr-portion" type="number" class="nutr-field-input"
+                       placeholder="200" min="1" max="5000">
+            </div>
+            <div class="nutr-field">
+                <label class="nutr-field-lbl">Date</label>
+                <input id="nutr-entry-date" type="date" class="nutr-field-input">
+            </div>
+        </div>
+
+        <button id="nutr-submit" class="nutr-submit-btn" type="button" disabled>
+            + Log Meal
+        </button>
+    </div>
+
+    <!-- ── TODAY'S MEALS ──────────────────────────── -->
+    <div class="nutr-card">
+        <div class="nutr-card-head">
+            <span class="nutr-card-title"> Today's Meals</span>
+            <span id="nutr-entry-count" class="nutr-count-badge">0 entries</span>
+        </div>
+        <div id="nutr-log-list">
+            <div class="nutr-empty-state">
+                <p>No meals logged yet</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 7-DAY CHART ────────────────────────────── -->
+    <div class="nutr-card">
+        <div class="nutr-card-head">
+            <span class="nutr-card-title">📊 7-Day Overview</span>
+        </div>
+        <div class="nutr-chart-box">
+            <canvas id="nutr-bar-chart"></canvas>
+        </div>
+    </div>
+
+</div><!-- /#nutrition-screen -->
+
+<!-- TOAST-->
+<div id="nutr-toast" class="nutr-toast" aria-live="polite">
+    <span id="nutr-toast-icon">✓</span>
+    <span id="nutr-toast-msg">Meal logged successfully!!</span>
+</div>

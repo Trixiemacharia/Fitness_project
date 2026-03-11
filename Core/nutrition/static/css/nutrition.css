@@ -1,0 +1,472 @@
+/* ── Date nav ─────────────────────────── */
+.nutr-date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.nutr-date-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--card-bg);
+    color: var(--grey-2);
+    font-size: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .2s, color .2s;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.nutr-date-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Label wrapper acts as a styled button — <label for="nutr-date-picker"> */
+.nutr-date-label-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: border-color .2s;
+    min-width: 148px;
+    justify-content: center;
+    position: relative;  /* needed to position the hidden input */
+    user-select: none;
+}
+.nutr-date-label-wrap:hover { border-color: var(--accent); }
+
+.nutr-cal-icon {
+    width: 14px; height: 14px;
+    stroke: var(--grey-2);
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
+#nutr-date-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 700;
+    color: var(--white);
+    letter-spacing: .3px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+/* Hidden native date picker — sits over the label, invisible but clickable */
+.nutr-hidden-date-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%; height: 100%;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-size: 0;          /* prevents any visible text */
+}
+
+/* ── Ring section ────────────────────── */
+.nutr-ring-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 16px;
+    margin-bottom: 14px;
+}
+
+.nutr-ring-wrap {
+    position: relative;
+    width: 160px; height: 160px;
+    flex-shrink: 0;
+}
+
+.nutr-ring-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    pointer-events: none;
+}
+
+.nutr-ring-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 34px; font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
+}
+.nutr-ring-sub {
+    font-size: 11px; color: var(--grey-2);
+    font-weight: 500; margin-top: 3px;
+}
+
+/* Macro pills */
+.nutr-macro-pills {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.nutr-pill {
+    background: var(--surface, #111);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 16px;
+    text-align: center;
+    min-width: 74px;
+}
+.prot-pill { border-top: 2.5px solid #60a5fa; }
+.carb-pill { border-top: 2.5px solid #fbbf24; }
+.fat-pill  { border-top: 2.5px solid #f87171; }
+
+.nutr-pill-num {
+    display: block;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px; font-weight: 800;
+    line-height: 1;
+}
+.prot-pill .nutr-pill-num { color: #60a5fa; }
+.carb-pill .nutr-pill-num { color: #fbbf24; }
+.fat-pill  .nutr-pill-num { color: #f87171; }
+
+.nutr-pill-name {
+    display: block;
+    font-size: 10px; color: var(--grey-2);
+    font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-top: 3px;
+}
+
+/* ── Cards ───────────────────────────── */
+.nutr-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.nutr-card-head {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.nutr-card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .5px;
+    color: var(--white);
+}
+
+/* ── Water ───────────────────────────── */
+#nutr-water-label { font-size: 12px; color: var(--grey-2); font-weight: 600; }
+
+.nutr-glasses {
+    display: flex; gap: 7px; flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.nutr-glass {
+    width: 34px; height: 42px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface, #111);
+    cursor: pointer;
+    position: relative; overflow: hidden;
+    display: flex; align-items: flex-end; justify-content: center;
+    transition: border-color .2s, transform .15s;
+    padding: 0;
+}
+.nutr-glass:hover        { border-color: #60a5fa; transform: translateY(-2px); }
+.nutr-glass.filled       { border-color: #60a5fa; background: rgba(96,165,250,.12); }
+.nutr-glass-water        {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 0%;
+    background: linear-gradient(to top, #3b82f6, #60a5fa);
+    border-radius: 0 0 4px 4px;
+    transition: height .4s cubic-bezier(.34,1.2,.64,1);
+}
+.nutr-glass.filled .nutr-glass-water { height: 75%; }
+.nutr-glass-drop { position: relative; z-index: 1; font-size: 14px; padding-bottom: 3px; }
+
+.nutr-water-track {
+    height: 5px; background: var(--border);
+    border-radius: 3px; overflow: hidden;
+}
+.nutr-water-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    border-radius: 3px;
+    transition: width .5s ease;
+    width: 0%;
+}
+
+/* ── Search ──────────────────────────── */
+.nutr-search-wrap { position: relative; margin-bottom: 8px; }
+
+.nutr-search-ico {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    width: 15px; height: 15px;
+    stroke: var(--grey-2); fill: none;
+    stroke-width: 2; stroke-linecap: round;
+    pointer-events: none;
+}
+
+.nutr-search-box {
+    width: 100%;
+    background: var(--surface, #111);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px;
+    padding: 11px 12px 11px 38px;
+    outline: none;
+    transition: border-color .2s;
+}
+.nutr-search-box::placeholder { color: var(--grey-2); }
+.nutr-search-box:focus         { border-color: var(--accent); }
+
+.nutr-spinner {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    width: 14px; height: 14px;
+    border: 2px solid rgba(200,241,53,.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: nutrSpin .7s linear infinite;
+}
+@keyframes nutrSpin { to { transform: translateY(-50%) rotate(360deg); } }
+
+/* ── Dropdown ────────────────────────── */
+.nutr-dropdown {
+    background: var(--surface, #111);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    max-height: 220px; overflow-y: auto;
+    margin-bottom: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+
+.nutr-dd-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+}
+.nutr-dd-item:last-child { border-bottom: none; }
+.nutr-dd-item:hover       { background: rgba(200,241,53,.07); }
+
+.nutr-dd-name { font-size: 14px; font-weight: 600; color: var(--white); }
+.nutr-dd-meta { font-size: 11px; color: var(--grey-2); margin-top: 2px; }
+.nutr-dd-cal  {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--accent); text-align: right; white-space: nowrap;
+}
+.nutr-dd-empty {
+    padding: 20px; text-align: center;
+    color: var(--grey-2); font-size: 13px;
+}
+
+/* ── Selected food chip ──────────────── */
+.nutr-food-chip {
+    background: rgba(200,241,53,.06);
+    border: 1.5px solid rgba(200,241,53,.22);
+    border-radius: 10px;
+    padding: 11px 13px;
+    margin-bottom: 10px;
+    animation: nutrSlide .2s ease;
+}
+@keyframes nutrSlide {
+    from { opacity:0; transform: translateY(-5px); }
+    to   { opacity:1; transform: translateY(0); }
+}
+
+.nutr-chip-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 7px;
+}
+.nutr-chip-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--accent);
+}
+.nutr-chip-x {
+    background: none; border: none;
+    color: var(--grey-2); cursor: pointer;
+    font-size: 15px; padding: 0; line-height: 1;
+    transition: color .2s;
+}
+.nutr-chip-x:hover { color: #f87171; }
+
+.nutr-chip-macros { display: flex; gap: 6px; flex-wrap: wrap; }
+.nutr-chip-macros span {
+    font-size: 11px; font-weight: 600;
+    padding: 3px 8px; border-radius: 4px;
+}
+.nc-cal  { background: rgba(200,241,53,.12); color: var(--accent); }
+.nc-prot { background: rgba(96,165,250,.12); color: #60a5fa; }
+.nc-carb { background: rgba(251,191,36,.12); color: #fbbf24; }
+.nc-fat  { background: rgba(248,113,113,.12); color: #f87171; }
+
+/* ── Meal type row ───────────────────── */
+.nutr-mt-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px; margin-bottom: 12px;
+}
+.nutr-mt {
+    background: var(--surface, #111);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--grey-2);
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px; font-weight: 600;
+    padding: 9px 4px;
+    cursor: pointer; text-align: center;
+    transition: all .2s;
+}
+.nutr-mt.active {
+    border-color: var(--accent);
+    background: rgba(200,241,53,.1);
+    color: var(--accent);
+}
+
+/* ── Fields ──────────────────────────── */
+.nutr-fields {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 12px;
+}
+.nutr-field { display: flex; flex-direction: column; gap: 5px; }
+.nutr-field-lbl {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .06em;
+    color: var(--grey-2);
+}
+.nutr-field-input {
+    background: var(--surface, #111);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px; padding: 9px 12px;
+    outline: none; transition: border-color .2s; width: 100%;
+}
+.nutr-field-input:focus { border-color: var(--accent); }
+
+/* ── Submit button ───────────────────── */
+.nutr-submit-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #0a0a0a;
+    border: none; border-radius: 10px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 800;
+    letter-spacing: .5px; padding: 13px;
+    cursor: pointer; transition: all .2s;
+    text-transform: uppercase;
+}
+.nutr-submit-btn:hover:not(:disabled) {
+    background: #b8e135;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(200,241,53,.2);
+}
+.nutr-submit-btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+/* ── Meal log groups ─────────────────── */
+.nutr-group { margin-bottom: 16px; }
+
+.nutr-group-header {
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 7px;
+}
+.nutr-group-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.nutr-group-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em;
+}
+.nutr-group-kcal { margin-left: auto; font-size: 11px; color: var(--grey-2); }
+
+/* Individual entry row */
+.nutr-entry {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface, #111);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 5px;
+    animation: nutrEntry .25s ease;
+}
+@keyframes nutrEntry {
+    from { opacity:0; transform: translateX(-8px); }
+    to   { opacity:1; transform: translateX(0); }
+}
+
+.nutr-entry-info { flex: 1; min-width: 0; }
+.nutr-entry-name {
+    font-size: 13px; font-weight: 600; color: var(--white);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.nutr-entry-sub { font-size: 11px; color: var(--grey-2); margin-top: 1px; }
+
+.nutr-entry-chips { display: flex; gap: 5px; flex-shrink: 0; }
+.nutr-chip-sm {
+    font-size: 10px; font-weight: 600;
+    padding: 2px 6px; border-radius: 4px;
+}
+
+.nutr-del {
+    background: none; border: none;
+    color: var(--grey-2); cursor: pointer;
+    font-size: 13px; padding: 3px;
+    border-radius: 4px;
+    transition: color .2s, background .2s;
+    line-height: 1; flex-shrink: 0;
+}
+.nutr-del:hover { color: #f87171; background: rgba(248,113,113,.1); }
+
+/* Empty state */
+.nutr-empty-state {
+    text-align: center; padding: 28px 16px;
+    color: var(--grey-2);
+}
+.nutr-empty-state span { font-size: 36px; display: block; margin-bottom: 8px; }
+
+.nutr-count-badge { font-size: 12px; color: var(--grey-2); }
+
+/* ── Chart ───────────────────────────── */
+.nutr-chart-box { position: relative; height: 180px; }
+
+/* ── Toast ───────────────────────────── */
+.nutr-toast {
+    position: fixed;
+    bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: var(--card-bg);
+    border: 1.5px solid rgba(200,241,53,.4);
+    border-radius: 10px;
+    padding: 12px 22px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 14px; font-weight: 600; color: var(--white);
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    opacity: 0; pointer-events: none;
+    transition: all .35s cubic-bezier(.34,1.56,.64,1);
+    z-index: 9999;
+    white-space: nowrap;
+}
+.nutr-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#nutr-toast-icon { font-size: 18px; color: var(--accent); }

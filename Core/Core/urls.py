@@ -30,6 +30,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('',include('users.urls')),
     path('',include('exercises.urls')),
+    path('',include('nutrition.urls')),
     path('api/',include(router.urls)),
     path('accounts/',include('allauth.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
