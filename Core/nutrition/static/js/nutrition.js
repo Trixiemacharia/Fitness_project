@@ -637,3 +637,134 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 });
+
+//MEAL PLAN
+// ═══════════════════════════════════════════════════
+// MEAL PLAN
+// ═══════════════════════════════════════════════════
+
+let mealPlanData = null;
+let activePlanDay = 'monday';
+
+async function loadMealPlan() {
+    try {
+        const res = await fetch('/api/nutrition/meal-plan/', {
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        });
+
+        const planSection = document.getElementById('nutr-meal-plan-section');
+        const noplan = document.getElementById('nutr-no-plan');
+
+        if (res.status === 404) {
+            // User has no meal plan
+            planSection.style.display = 'none';
+            noplan.style.display = 'block';
+            return;
+        }
+
+        const data = await res.json();
+        mealPlanData = data;
+
+        planSection.style.display = 'block';
+        noplan.style.display = 'none';
+
+        // Set goal badge
+        const goalBadge = document.getElementById('nutr-plan-goal');
+        if (goalBadge) goalBadge.textContent = data.goal || '';
+
+        // Set daily targets
+        renderPlanTargets(data.daily_targets);
+
+        // Set active day to today
+        const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+        activePlanDay = data.days[todayName] ? todayName : 'monday';
+
+        // Highlight correct day tab
+        document.querySelectorAll('.nutr-day-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.getAttribute('data-day') === activePlanDay);
+        });
+
+        renderPlanDay(activePlanDay);
+
+    } catch (e) {
+        console.error('Failed to load meal plan:', e);
+    }
+}
+
+function renderPlanTargets(targets) {
+    const el = document.getElementById('nutr-plan-targets');
+    if (!el || !targets) return;
+
+    el.innerHTML = `
+        <div class="nutr-plan-target-row">
+            <div class="nutr-plan-target">
+                <span class="npt-val">${Math.round(targets.calories)}</span>
+                <span class="npt-label">kcal</span>
+            </div>
+            <div class="nutr-plan-target">
+                <span class="npt-val">${Math.round(targets.protein)}g</span>
+                <span class="npt-label">Protein</span>
+            </div>
+            <div class="nutr-plan-target">
+                <span class="npt-val">${Math.round(targets.carbs)}g</span>
+                <span class="npt-label">Carbs</span>
+            </div>
+            <div class="nutr-plan-target">
+                <span class="npt-val">${Math.round(targets.fats)}g</span>
+                <span class="npt-label">Fats</span>
+            </div>
+        </div>
+    `;
+}
+
+function renderPlanDay(dayName) {
+    const container = document.getElementById('nutr-plan-day-content');
+    if (!container || !mealPlanData) return;
+
+    const dayData = mealPlanData.days[dayName];
+    if (!dayData) {
+        container.innerHTML = `<div class="nutr-empty-state"><p>No meals for this day</p></div>`;
+        return;
+    }
+
+    const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+    const mealIcons = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🍎' };
+
+    let html = '';
+    mealTypes.forEach(type => {
+        const items = dayData[type] || [];
+        if (items.length === 0) return;
+
+        html += `
+            <div class="nutr-plan-meal-group">
+                <div class="nutr-plan-meal-type">
+                    ${mealIcons[type]} ${type.charAt(0).toUpperCase() + type.slice(1)}
+                </div>
+                ${items.map(item => `
+                    <div class="nutr-plan-item">
+                        <div class="nutr-plan-item-left">
+                            <span class="nutr-plan-item-name">${item.food}</span>
+                            <span class="nutr-plan-item-qty">${item.quantity}${item.unit}</span>
+                        </div>
+                        <div class="nutr-plan-item-right">
+                            <span class="nutr-plan-item-cal">${Math.round(item.calories)} kcal</span>
+                            <span class="nutr-plan-item-macro">${Math.round(item.protein)}g protein</span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    });
+
+    container.innerHTML = html || `<div class="nutr-empty-state"><p>No meals planned</p></div>`;
+}
+
+// Day tab switching
+document.querySelectorAll('.nutr-day-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.nutr-day-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activePlanDay = tab.getAttribute('data-day');
+        renderPlanDay(activePlanDay);
+    });
+});

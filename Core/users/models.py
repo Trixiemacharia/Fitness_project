@@ -52,6 +52,7 @@ class UserProfile(models.Model):
     prefered_focus = models.JSONField(default=list) #multi-select
     equipment = models.JSONField(default=list) #multi-select
     meal_plan_recommendations = models.CharField(max_length=3,choices=[('Yes','Yes'),('No','No')])
+    wants_meal_plan = models.BooleanField(default=False)
     bio = models.TextField(blank=True,null=True)
     joined_on = models.DateTimeField(auto_now_add=True)
 
@@ -211,16 +212,24 @@ class MealPlanItem(models.Model):
     meal_plan_day = models.ForeignKey(MealPlanDay, on_delete=models.CASCADE, related_name='items')
     food = models.ForeignKey('nutrition.FoodItem', on_delete=models.CASCADE)
     meal_type = models.CharField(max_length=20, choices=MEAL_TYPE_CHOICES)
-    quantity = models.FloatField(default=1.0)
-    quantity_unit = models.CharField(max_length=50, default='serving')
+    quantity = models.FloatField(default=100)
+    quantity_unit = models.CharField(max_length=50, default='g')
 
     @property
     def calories(self):
-        return (self.food.calories or 0) * self.quantity
+        return round(self.food.calories_per_100g * self.quantity / 100, 1)
 
     @property
     def protein(self):
-        return (self.food.protein or 0) * self.quantity
+        return round(self.food.protein_per_100g * self.quantity / 100, 1)
+    
+    @property
+    def carbs(self):
+        return round(self.food.carbs_per_100g * self.quantity / 100, 1)
+
+    @property
+    def fats(self):
+        return round(self.food.fats_per_100g * self.quantity / 100, 1)
 
     def __str__(self):
         return f"{self.meal_plan_day.day} - {self.meal_type} - {self.food.name}"

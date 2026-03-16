@@ -60,6 +60,7 @@ function switchScreen(screenId) {
 
     if (screenId === 'progress-screen') loadProgressScreen();
     if (screenId === 'profile-screen')  loadProfileScreen();
+    if(screenId === 'nutrition-screen') loadMealPlan();
 
     closeSidebar();
     window.scrollTo({ top: 0, behavior: 'smooth' });

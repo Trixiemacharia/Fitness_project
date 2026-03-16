@@ -15,14 +15,13 @@
                 <line x1="3"  y1="10" x2="21" y2="10"/>
             </svg>
             <span id="nutr-date-label">Today</span>
-            <!-- The actual date input -->
             <input type="date" id="nutr-date-picker" class="nutr-hidden-date-input">
         </label>
 
         <button class="nutr-date-btn" id="nutr-next-day" type="button">&#8250;</button>
     </div>
 
-    <!--CALORIE DOUGHNUT-->
+    <!-- CALORIE DOUGHNUT -->
     <div class="nutr-ring-section">
         <div class="nutr-ring-wrap">
             <canvas id="nutr-ring-canvas" width="160" height="160"></canvas>
@@ -47,7 +46,7 @@
         </div>
     </div>
 
-    <!--WATER TRACKER -->
+    <!-- WATER TRACKER -->
     <div class="nutr-card">
         <div class="nutr-card-head">
             <span class="nutr-card-title">💧 Water Intake</span>
@@ -59,13 +58,12 @@
         </div>
     </div>
 
-    <!--LOG A MEAL-->
+    <!-- LOG A MEAL -->
     <div class="nutr-card">
         <div class="nutr-card-head">
             <span class="nutr-card-title">🍽️ Log a Meal</span>
         </div>
 
-        <!-- Food search -->
         <div class="nutr-search-wrap">
             <svg class="nutr-search-ico" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
@@ -76,10 +74,8 @@
             <div id="nutr-spinner" class="nutr-spinner" style="display:none"></div>
         </div>
 
-        <!-- Search dropdown -->
         <div id="nutr-dropdown" class="nutr-dropdown" style="display:none"></div>
 
-        <!-- Selected food chip -->
         <div id="nutr-food-chip" class="nutr-food-chip" style="display:none">
             <div class="nutr-chip-top">
                 <span id="nutr-chip-name" class="nutr-chip-name"></span>
@@ -93,15 +89,13 @@
             </div>
         </div>
 
-        <!-- Meal type -->
         <div class="nutr-mt-row">
-            <button class="nutr-mt active" data-mt="breakfast" type="button"> Breakfast</button>
-            <button class="nutr-mt" data-mt="lunch"     type="button"> Lunch</button>
-            <button class="nutr-mt" data-mt="dinner"    type="button"> Dinner</button>
-            <button class="nutr-mt" data-mt="snack"     type="button"> Snack</button>
+            <button class="nutr-mt active" data-mt="breakfast" type="button">Breakfast</button>
+            <button class="nutr-mt" data-mt="lunch"     type="button">Lunch</button>
+            <button class="nutr-mt" data-mt="dinner"    type="button">Dinner</button>
+            <button class="nutr-mt" data-mt="snack"     type="button">Snack</button>
         </div>
 
-        <!-- Portion + date -->
         <div class="nutr-fields">
             <div class="nutr-field">
                 <label class="nutr-field-lbl">Portion (g / ml)</label>
@@ -119,10 +113,10 @@
         </button>
     </div>
 
-    <!-- ── TODAY'S MEALS ──────────────────────────── -->
+    <!-- TODAY'S MEALS -->
     <div class="nutr-card">
         <div class="nutr-card-head">
-            <span class="nutr-card-title"> Today's Meals</span>
+            <span class="nutr-card-title">🍴 Today's Meals</span>
             <span id="nutr-entry-count" class="nutr-count-badge">0 entries</span>
         </div>
         <div id="nutr-log-list">
@@ -132,7 +126,7 @@
         </div>
     </div>
 
-    <!-- ── 7-DAY CHART ────────────────────────────── -->
+    <!-- 7-DAY CHART -->
     <div class="nutr-card">
         <div class="nutr-card-head">
             <span class="nutr-card-title">📊 7-Day Overview</span>
@@ -142,9 +136,41 @@
         </div>
     </div>
 
-</div><!-- /#nutrition-screen -->
+    <!-- ✅ MEAL PLAN — inside nutrition screen so it hides with it -->
+    <div id="nutr-meal-plan-section" class="nutr-card" style="display:none;">
+        <div class="nutr-card-head">
+            <span class="nutr-card-title">📋 My Meal Plan</span>
+            <span id="nutr-plan-goal" class="nutr-count-badge"></span>
+        </div>
 
-<!-- TOAST-->
+        <div class="nutr-day-tabs">
+            <button class="nutr-day-tab active" data-day="monday">Mon</button>
+            <button class="nutr-day-tab" data-day="tuesday">Tue</button>
+            <button class="nutr-day-tab" data-day="wednesday">Wed</button>
+            <button class="nutr-day-tab" data-day="thursday">Thu</button>
+            <button class="nutr-day-tab" data-day="friday">Fri</button>
+            <button class="nutr-day-tab" data-day="saturday">Sat</button>
+            <button class="nutr-day-tab" data-day="sunday">Sun</button>
+        </div>
+
+        <div class="nutr-plan-targets" id="nutr-plan-targets"></div>
+
+        <div id="nutr-plan-day-content">
+            <div class="nutr-empty-state"><p>Loading meal plan...</p></div>
+        </div>
+    </div>
+
+    <!-- ✅ NO PLAN STATE — inside nutrition screen so it hides with it -->
+    <div id="nutr-no-plan" class="nutr-card" style="display:none;">
+        <div class="nutr-empty-state">
+            <p style="font-size:32px; margin-bottom:8px;">🥗</p>
+            <p style="font-weight:600; color:var(--white); margin-bottom:4px;">No meal plan yet</p>
+        </div>
+    </div>
+
+</div>
+
+<!-- TOAST -->
 <div id="nutr-toast" class="nutr-toast" aria-live="polite">
     <span id="nutr-toast-icon">✓</span>
     <span id="nutr-toast-msg">Meal logged successfully!!</span>

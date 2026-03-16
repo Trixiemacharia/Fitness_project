@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db.models import Sum, Q
 from django.utils import timezone
 from rest_framework import generics, status
@@ -6,6 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import FoodItem, MealLog
 from .serializers import FoodItemSerializer, MealLogSerializer
+from services.meal_plan_service import generate_meal_plan
+from services.nutrition_service import calculate_targets
+from users.models import MealPlan
 
 
 class FoodSearchView(generics.ListAPIView):
@@ -88,7 +92,6 @@ def daily_summary(request):
 @permission_classes([IsAuthenticated])
 def weekly_summary(request):
     #Returns last 7 days of calorie data for chart.js chart.
-    from datetime import timedelta, date
     today = timezone.now().date()
     days = []
     for i in range(6, -1, -1):
@@ -103,3 +106,74 @@ def weekly_summary(request):
             'fats': round(sum(log.fats for log in logs), 1),
         })
     return Response(days)
+
+#meal plan 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_meal_plan(request):
+    try:
+        profile = request.user.profile
+
+        if not profile.wants_meal_plan:
+            return Response(
+                {'error':'Meal plan not requested'},
+                status= status.HTTP_400_BAD_REQUEST
+            )
+        meal_plan = generate_meal_plan(request.user)
+        targets = calculate_targets(profile)
+        return Response({
+            'success': True,
+            'meal_plan_id': meal_plan.id,
+            'name': meal_plan.name,
+            'daily_targets': targets,
+        }, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response(
+            {'success': False, 'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def view_meal_plan(request):
+    """Fetch the user's active meal plan"""
+    try:
+        meal_plan = MealPlan.objects.get(user=request.user, is_active=True)
+        days_data = {}
+
+        for day in meal_plan.days.all():
+            days_data[day.day] = {
+                'breakfast': [],
+                'lunch': [],
+                'dinner': [],
+                'snack': [],
+            }
+            for item in day.items.select_related('food'):
+                days_data[day.day][item.meal_type].append({
+                    'food': item.food.name,
+                    'quantity': item.quantity,
+                    'unit': item.quantity_unit,
+                    'calories': item.calories,
+                    'protein': item.protein,
+                    'carbs': item.carbs, 
+                    'fats': item.fats,       
+                })
+
+        return Response({
+            'meal_plan': meal_plan.name,
+            'goal': meal_plan.goal,
+            'daily_targets': {
+                'calories': meal_plan.target_calories,
+                'protein': meal_plan.target_protein,
+                'carbs': meal_plan.target_carbs,
+                'fats': meal_plan.target_fat,   
+            },
+            'days': days_data,
+        })
+
+    except MealPlan.DoesNotExist:
+        return Response(
+            {'error': 'No active meal plan found'},
+            status=status.HTTP_404_NOT_FOUND
+        )

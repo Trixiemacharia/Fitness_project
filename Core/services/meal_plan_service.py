@@ -2,63 +2,53 @@
 import random
 from django.db.models import Q
 from .nutrition_service import calculate_targets
-from myapp.models import Food, MealPlan, MealPlanDay, MealPlanItem
+from users.models import MealPlan, MealPlanDay, MealPlanItem
+from nutrition.models import FoodItem
 
 DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
 MEAL_CALORIE_SPLIT = {
-    'breakfast': 0.25,   # 25% of daily calories
-    'lunch': 0.35,       # 35%
-    'dinner': 0.30,      # 30%
-    'snack': 0.10,       # 10%
+    'breakfast': 0.25,
+    'lunch': 0.35,       
+    'dinner': 0.30,      
+    'snack': 0.10,       
 }
 
 
 def get_foods_for_meal(meal_type, target_calories):
-    """
-    Fetch suitable foods from DB for a meal type
-    Prioritize local Kenyan foods, supplement with USDA
-    """
     # Get local foods first
     local_foods = list(
-        Food.objects.filter(
+        FoodItem.objects.filter(
             source='local',
-            calories__isnull=False,
-            calories__gt=0
+            calories_per_100g__gt = 0
         )
     )
 
     usda_foods = list(
-        Food.objects.filter(
+        FoodItem.objects.filter(
             source='usda',
-            calories__isnull=False,
-            calories__gt=0
+            calories_per_100g__gt=0
         )
     )
 
     # Prioritize local Kenyan foods
-    available_foods = local_foods + usda_foods
+    all_foods = local_foods + usda_foods
 
-    if not available_foods:
+    if not all_foods:
         return []
 
     # Pick foods that reasonably fit the calorie target
     suitable = [
-        f for f in available_foods
-        if f.calories and (target_calories * 0.5) <= f.calories <= (target_calories * 1.5)
+        f for f in all_foods
+        if (target_calories * 0.3) <= f.calories_per_100g <= (target_calories * 1.5)
     ]
-
-    # Fallback to any food if nothing fits
     if not suitable:
-        suitable = available_foods
+        suitable = all_foods
 
     return random.sample(suitable, min(2, len(suitable)))
 
 
 def generate_meal_plan(user):
-    """
-    Generates a 7-day meal plan based on user's fitness goal
-    """
     profile = user.profile
     targets = calculate_targets(profile)
 
@@ -68,8 +58,8 @@ def generate_meal_plan(user):
     # Create new meal plan
     meal_plan = MealPlan.objects.create(
         user=user,
-        name=f"7-Day {profile.get_goal_display()} Plan",
-        goal=profile.goal,
+        name=f"7-Day {profile.get_goal_type_display()} Plan",
+        goal=profile.goal_type,
         target_calories=targets['calories'],
         target_protein=targets['protein'],
         target_carbs=targets['carbs'],
@@ -85,18 +75,19 @@ def generate_meal_plan(user):
 
         # Generate each meal for the day
         for meal_type, split in MEAL_CALORIE_SPLIT.items():
-            meal_calories = targets['calories'] * split
-            foods = get_foods_for_meal(meal_type, meal_calories)
+            meal_target_calories = targets['calories'] * split
+            foods = get_foods_for_meal(meal_type, meal_target_calories)
 
             for food in foods:
                 # Calculate quantity needed to hit calorie target
-                quantity = round(meal_calories / food.calories, 1) if food.calories else 1.0
+                quantity = round((meal_target_calories / food.calories_per_100g) * 100, 1) if food.calories_per_100g else 100.0
 
                 MealPlanItem.objects.create(
                     meal_plan_day=plan_day,
                     food=food,
                     meal_type=meal_type,
                     quantity=quantity,
+                    quantity_unit = 'g',
                 )
 
     return meal_plan
