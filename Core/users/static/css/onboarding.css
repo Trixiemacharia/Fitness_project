@@ -1,7 +1,7 @@
 body{
     margin:0;
     height: 100vh;
-    background: linear-gradient(135deg,#6e44ff,#7b6eff,#8a6fff);
+    background: linear-gradient(to bottom, #000000, #ffffff);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -44,7 +44,7 @@ body{
 
 button{
     background-color: #fff;
-    color: #6e44ff;
+    color: black;
     font-weight: bold;
     border: none;
     padding: 12px 24px;
@@ -54,6 +54,6 @@ button{
 }
 
 button hover{
-    background-color: #6e44ff;
+    background-color:black;
     color: #fff;
 }

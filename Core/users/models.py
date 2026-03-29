@@ -28,13 +28,6 @@ class UserProfile(models.Model):
         ('back','Back'),
         ('shoulder','Shoulder'),
     ]
-    EQUIPMENTS_AVAILABLE_TO_THEM=[
-        ('none','None'),
-        ('dumbells','Dumbells'),
-        ('resistance_bands','Resistance Bands'),
-        ('barbell','Barbell'),
-        ('machines','Machines'),
-    ]
 
     user = models.OneToOneField(User,on_delete=models.CASCADE,primary_key=True,related_name='profile')
     name = models.CharField(max_length=20)
@@ -43,21 +36,28 @@ class UserProfile(models.Model):
     email = models.EmailField(unique=True)
     password_hash = models.CharField(max_length=255, unique=True)
     gender = models.CharField(max_length=1,choices=[('M','Male'),('F','Female')])
-    age = models.PositiveIntegerField()
+    date_of_birth = models.DateField(null=True, blank=True)
     height = models.FloatField()
-    weight = models.FloatField()
     goal_type= models.CharField(max_length=20,choices=GOAL_CHOICES)
     activity_level = models.CharField(max_length=20,choices=ACTIVITY_LEVEL_CHOICES)
     fitness_level = models.CharField(max_length=20,choices=FITNESS_LEVEL_CHOICES)
     prefered_focus = models.JSONField(default=list) #multi-select
-    equipment = models.JSONField(default=list) #multi-select
     meal_plan_recommendations = models.CharField(max_length=3,choices=[('Yes','Yes'),('No','No')])
     wants_meal_plan = models.BooleanField(default=False)
     bio = models.TextField(blank=True,null=True)
     joined_on = models.DateTimeField(auto_now_add=True)
 
-def __str__(self):
-    return self.user.username
+    def __str__(self):
+         return self.user.username
+
+    @property
+    def age(self):
+        if not self.date_of_birth:
+            return None
+        from datetime import date
+        today = date.today()
+        d = self.date_of_birth
+        return today.year - d.year - ((today.month, today.day) < (d.month, d.day))
 
 # ===== USER PREFERENCES =====
 class UserPreferences(models.Model):

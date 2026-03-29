@@ -11,7 +11,7 @@ def register_user(request):
         email = request.POST['email']
         password = request.POST['password']
         user = User.objects.create_user(username=username, email=email,password=password)
-        login(request,user)
+        login(request,user,backend='django.contrib.auth.backend.ModelBackend')
         return redirect('onboarding')
     return render(request,'users/register.html')
 
@@ -23,7 +23,7 @@ def login_user(request):
 
         if user is not None:
             login(request,user)
-            print("✅ Login successful!")
+            print("Login successful!")
             return redirect('dashboard')
         else:
                 print("Invalid username or password")

@@ -12,18 +12,15 @@ from services.nutrition_service import calculate_targets
 from users.models import MealPlan
 
 
-class FoodSearchView(generics.ListAPIView):
-    #Search food items by name, returns matching results.
-    serializer_class = FoodItemSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        query = self.request.query_params.get('q', '').strip()
-        if not query or len(query) < 2:
-            return FoodItem.objects.none()
-        return FoodItem.objects.filter(
-            Q(name__icontains=query) | Q(category__icontains=query)
-        )[:20]
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def food_search(request):
+    query = request.query_params.get('q','').strip()
+    if not query or len(query)<2:
+        return Response([])
+    from services.food_service import search_food
+    results = search_food(query)
+    return Response(results)
 
 
 class MealLogListCreateView(generics.ListCreateAPIView):

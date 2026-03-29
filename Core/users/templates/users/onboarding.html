@@ -12,17 +12,35 @@
                 <form method="POST">
                     {% csrf_token %}
                     {% if question.type == 'choice' %}
-                    {% for choice in question.choices %}
-                    <label class="choice-label"><input type="radio" name="answer" value="{{ choice.0 }}" required>{{ choice.1 }}</label><br>
-                    {% endfor %}
-                    {% elif question.type == 'multi' %}
-                    <label class="choice-label"><input type="checkbox" name="answer" value="{{choice.0}}">{{choice.1}}</label><br>
+                        {% for choice in question.choices %}
+                        <label class="choice-label">
+                            <input type="radio" name="answer" value="{{ choice.0 }}" required>{{ choice.1 }}
+                        </label><br>
+                        {% endfor %}
 
-                    {% for choice in question.choices %}
-                    <label class="choice-label"><input type="checkbox" name="answer" value="{{ choice.0 }}" >{{ choice.1 }}</label><br>
-                    {% endfor %}
+                    {% elif question.type == 'multi' %}
+                        {% for choice in question.choices %}   {# ← removed the stray label before the loop #}
+                        <label class="choice-label">
+                            <input type="checkbox" name="answer" value="{{ choice.0 }}">{{ choice.1 }}
+                        </label><br>
+                        {% endfor %}
+
                     {% elif question.type == 'number' %}
-                    <label class="choice-label"><input type="number" name="answer" required></label><br>
+                        <label class="choice-label">
+                            <input type="number" name="answer" min="1" required>
+                        </label><br>
+
+                    {% elif question.type == 'height' %}
+                        <label class="choice-label">
+                            <input type="number" name="answer" min="50" max="300" required>cm
+                        </label><br>
+
+                    {% elif question.type == 'dob' %}
+                        <div class="dob-fields">
+                            <input type="number" name="dob_day"   placeholder="DD"   min="1"    max="31"   required style="width:60px">
+                            <input type="number" name="dob_month" placeholder="MM"   min="1"    max="12"   required style="width:60px">
+                            <input type="number" name="dob_year"  placeholder="YYYY" min="1900" max="2099" required style="width:80px">
+                        </div>
                     {% endif %}
 
                     <button type="submit">Next</button>

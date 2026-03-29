@@ -15,11 +15,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='exercise',
-            name='equipment',
-            field=models.CharField(blank=True, default='Bodyweight', max_length=200),
-        ),
-        migrations.AddField(
-            model_name='exercise',
             name='instructions',
             field=models.TextField(blank=True, help_text='One instruction per line. e.g: 1. Stand with feet shoulder-width apart'),
         ),

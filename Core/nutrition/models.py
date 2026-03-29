@@ -62,7 +62,10 @@ class MealLog(models.Model):
     food_item = models.ForeignKey(FoodItem, on_delete=models.CASCADE)
     date = models.DateField()
     meal_type = models.CharField(max_length=20, choices=MEAL_TYPE_CHOICES)
-    portion_size = models.FloatField(help_text='Portion size in grams/ml')
+    portion_size = models.FloatField(default=100, help_text='Portion in grams')
+    protein_portion = models.FloatField(default=0, help_text='Protein in grams')
+    carbs_portion = models.FloatField(default=0, help_text='Carbs in grams ')
+    fats_portion = models.FloatField(default=0, help_text='fats iin grams')
     notes = models.CharField(max_length=200, blank=True)
     logged_at = models.DateTimeField(auto_now_add=True)
 
@@ -71,6 +74,13 @@ class MealLog(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.food_item.name} on {self.date}"
+    
+    def save(self, *args, **kwargs):
+        factor = self.portion_size / 100
+        self.protein_portion = round(self.food_item.protein_per_100g * factor, 1)
+        self.carbs_portion = round(self.food_item.carbs_per_100g * factor, 1)
+        self.fats_portion = round(self.food_item.fats_per_100g * factor, 1)
+        super().save(*args, **kwargs)
 
     @property
     def calories(self):

@@ -70,10 +70,8 @@ class Exercise(models.Model):
     description   = models.TextField(blank=True)
     level         = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='beginner')
     image         = models.ImageField(upload_to='exercises/', blank=True, null=True)
-    demo_video    = models.FileField(upload_to='exercise_videos/', blank=True, null=True)
+    demo_video    = models.URLField( blank=True, null=True, help_text="https://pub-a3e3770ca86b453197bf4160321b1b0a.r2.dev")
 
-    # Equipment needed
-    equipment     = models.CharField(max_length=200, blank=True, default='Bodyweight')
 
     # Step-by-step instructions
     instructions  = models.TextField(blank=True, help_text='One instruction per line. e.g: 1. Stand with feet shoulder-width apart')
@@ -81,8 +79,8 @@ class Exercise(models.Model):
     # ── Strength fields ──────────────────────────────────────────────
     # derived dynamically from level
     sets      = models.PositiveIntegerField(blank=True, null=True)
-    reps      = models.CharField(max_length=20, blank=True)   # e.g. "8-12", "to failure"
-    weight    = models.CharField(max_length=50, blank=True)   # e.g. "5-8kg", "Bodyweight"
+    reps      = models.CharField(max_length=20, blank=True)   
+    weight    = models.CharField(max_length=50, blank=True)   
     rest_time = models.PositiveIntegerField(blank=True, null=True, help_text='Rest in seconds')
 
     # ── HIIT fields ──────────────────────────────────────────────────
@@ -91,8 +89,8 @@ class Exercise(models.Model):
     rounds         = models.PositiveIntegerField(blank=True, null=True)
 
     # ── Cardio fields ────────────────────────────────────────────────
-    duration  = models.CharField(max_length=50, blank=True)   # e.g. "30 min"
-    distance  = models.CharField(max_length=50, blank=True)   # e.g. "5km"
+    duration  = models.CharField(max_length=50, blank=True)   
+    distance  = models.CharField(max_length=50, blank=True)   
     intensity = models.CharField(max_length=20, choices=INTENSITY_CHOICES, blank=True)
 
     class Meta:
@@ -101,7 +99,7 @@ class Exercise(models.Model):
     def __str__(self):
         return f"{self.name} ({self.level}) — {self.category}"
 
-    # ── Dynamic stat helpers (called by serializer) ──────────────────
+    # ── Dynamic stat helpers  ──────────────────
 
     def get_sets(self):
         if self.sets:
@@ -133,13 +131,10 @@ class Exercise(models.Model):
             return self.rounds
         return {'beginner': 3, 'intermediate': 4, 'advanced': 5}.get(self.level, 3)
     
-    def get_equipment(self):
-        return self.equipment if self.equipment else 'Bodyweight'
-    
     def get_instructions_list(self):
         if not self.instructions:
             return []
-        return [line.strip() for line in self.instructions.strip().splitLines() if line.strip()]
+        return [line.strip() for line in self.instructions.strip().splitlines() if line.strip()]
     
 class ExerciseLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='exercise_logs')
@@ -148,7 +143,7 @@ class ExerciseLog(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('user', 'exercise')  # one log per user per exercise
+        unique_together = ('user', 'exercise')  
         ordering = ['-updated_at']
 
     def __str__(self):
