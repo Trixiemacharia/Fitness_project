@@ -25,14 +25,14 @@ class ExerciseSerializer(serializers.ModelSerializer):
     rest_time_display  = serializers.SerializerMethodField()
     stats              = serializers.SerializerMethodField()
     instructions_list  = serializers.SerializerMethodField()
-    equipment_display  = serializers.SerializerMethodField()
+ 
 
     class Meta:
         model  = Exercise
         fields = [
             'id', 'name', 'description', 'level', 'exercise_type',
             'category', 'muscle_group', 'muscle_group_name',
-            'image', 'demo_video', 'equipment', 'equipment_display',
+            'image', 'demo_video',
             'instructions', 'instructions_list',
 
             # Raw overrideable fields
