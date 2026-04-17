@@ -341,10 +341,6 @@ function showExerciseDetail(ex) {
             <!-- Quick stats row -->
             <div class="detail-stats-row">
                 ${statsChips}
-                <div class="detail-stat">
-                    <span class="detail-stat-label">Equipment</span>
-                    <span class="detail-stat-value">${ex.equipment_display || 'Bodyweight'}</span>
-                </div>
             </div>
 
             <!-- Description -->

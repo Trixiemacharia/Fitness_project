@@ -7,23 +7,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const dashboardData = JSON.parse(dataElement.textContent);
 
-  Chart.defaults.color = '#6b6b80';
-  Chart.defaults.borderColor = '#23232e';
+  Chart.defaults.color = '#64748b';
+  Chart.defaults.borderColor = '#d7e3f4';
   Chart.defaults.font.family = "'DM Mono', monospace";
   Chart.defaults.font.size = 11;
 
-  const LIME = '#c8f135';
-  const VIOLET = '#7c6af7';
+  const BLUE = '#2563eb';
+  const VIOLET = '#7c3aed';
   const ORANGE = '#f97316';
-  const CYAN = '#22d3ee';
-  const RED = '#f43f5e';
-  const GREEN = '#4ade80';
-  const PALETTE = [LIME, VIOLET, ORANGE, CYAN, RED, GREEN, '#fb923c', '#a78bfa', '#34d399', '#f472b6'];
+  const CYAN = '#06b6d4';
+  const RED = '#e11d48';
+  const GREEN = '#16a34a';
+  const NEUTRAL = '#dbe7f5';
+  const GRID = '#d7e3f4';
+  const PALETTE = [BLUE, VIOLET, ORANGE, CYAN, RED, GREEN, '#0ea5e9', '#a78bfa', '#34d399', '#f59e0b'];
 
   function makeGradient(ctx, color) {
     const gradient = ctx.createLinearGradient(0, 0, 0, 260);
-    gradient.addColorStop(0, color + '55');
-    gradient.addColorStop(1, color + '00');
+    gradient.addColorStop(0, color + '40');
+    gradient.addColorStop(1, color + '05');
     return gradient;
   }
 
@@ -38,10 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
         datasets: [{
           label: 'New Users',
           data: dashboardData.reg.daily.data,
-          borderColor: LIME,
-          backgroundColor: makeGradient(regCtx, LIME),
+          borderColor: BLUE,
+          backgroundColor: makeGradient(regCtx, BLUE),
           borderWidth: 2,
-          pointBackgroundColor: LIME,
+          pointBackgroundColor: BLUE,
           pointRadius: 3,
           tension: 0.4,
           fill: true,
@@ -51,8 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
         responsive: true,
         plugins: { legend: { display: false } },
         scales: {
-          x: { grid: { color: '#23232e' } },
-          y: { grid: { color: '#23232e' }, beginAtZero: true, ticks: { precision: 0 } },
+          x: { grid: { color: GRID } },
+          y: { grid: { color: GRID }, beginAtZero: true, ticks: { precision: 0 } },
         },
       },
     });
@@ -79,147 +81,168 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  new Chart(document.getElementById('activeChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Active', 'Inactive'],
-      datasets: [{
-        data: dashboardData.activeData,
-        backgroundColor: [GREEN, '#23232e'],
-        borderWidth: 0,
-        hoverOffset: 6,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: 'bottom', labels: { padding: 16 } },
-        tooltip: { callbacks: { label: (context) => ` ${context.parsed} users` } },
+  const activeChartElement = document.getElementById('activeChart');
+  if (activeChartElement) {
+    new Chart(activeChartElement, {
+      type: 'doughnut',
+      data: {
+        labels: ['Active', 'Inactive'],
+        datasets: [{
+          data: dashboardData.activeData,
+          backgroundColor: [GREEN, NEUTRAL],
+          borderWidth: 0,
+          hoverOffset: 6,
+        }],
       },
-      cutout: '70%',
-    },
-  });
-
-  new Chart(document.getElementById('retentionChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Retained', 'Churned'],
-      datasets: [{
-        data: dashboardData.retentionData,
-        backgroundColor: [CYAN, RED],
-        borderWidth: 0,
-        hoverOffset: 6,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom', labels: { padding: 16 } } },
-      cutout: '70%',
-    },
-  });
-
-  new Chart(document.getElementById('completionChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Completed', 'Incomplete'],
-      datasets: [{
-        data: dashboardData.completionData,
-        backgroundColor: [GREEN, '#23232e'],
-        borderWidth: 0,
-        hoverOffset: 6,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      cutout: '72%',
-    },
-  });
-
-  new Chart(document.getElementById('popularExChart'), {
-    type: 'bar',
-    data: {
-      labels: dashboardData.popularEx.labels,
-      datasets: [{
-        label: 'Logs',
-        data: dashboardData.popularEx.data,
-        backgroundColor: PALETTE.map((color) => color + 'cc'),
-        borderRadius: 6,
-        borderSkipped: false,
-      }],
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#23232e' }, beginAtZero: true, ticks: { precision: 0 } },
-        y: { grid: { display: false } },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 16 } },
+          tooltip: { callbacks: { label: (context) => ` ${context.parsed} users` } },
+        },
+        cutout: '70%',
       },
-    },
-  });
+    });
+  }
 
-  new Chart(document.getElementById('categoryChart'), {
-    type: 'bar',
-    data: {
-      labels: dashboardData.category.labels,
-      datasets: [{
-        label: 'Logs',
-        data: dashboardData.category.data,
-        backgroundColor: VIOLET + 'bb',
-        borderRadius: 6,
-        borderSkipped: false,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false } },
-        y: { grid: { color: '#23232e' }, beginAtZero: true, ticks: { precision: 0 } },
+  const retentionChartElement = document.getElementById('retentionChart');
+  if (retentionChartElement) {
+    new Chart(retentionChartElement, {
+      type: 'doughnut',
+      data: {
+        labels: ['Retained', 'Churned'],
+        datasets: [{
+          data: dashboardData.retentionData,
+          backgroundColor: [CYAN, RED],
+          borderWidth: 0,
+          hoverOffset: 6,
+        }],
       },
-    },
-  });
-
-  new Chart(document.getElementById('foodChart'), {
-    type: 'bar',
-    data: {
-      labels: dashboardData.food.labels,
-      datasets: [{
-        label: 'Logs',
-        data: dashboardData.food.data,
-        backgroundColor: ORANGE + 'bb',
-        borderRadius: 6,
-        borderSkipped: false,
-      }],
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#23232e' }, beginAtZero: true, ticks: { precision: 0 } },
-        y: { grid: { display: false } },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { padding: 16 } } },
+        cutout: '70%',
       },
-    },
-  });
+    });
+  }
 
-  new Chart(document.getElementById('foodSourceChart'), {
-    type: 'pie',
-    data: {
-      labels: dashboardData.foodSource.labels,
-      datasets: [{
-        data: dashboardData.foodSource.data,
-        backgroundColor: [LIME, CYAN],
-        borderWidth: 0,
-        hoverOffset: 8,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom', labels: { padding: 16 } } },
-    },
-  });
+  const completionChartElement = document.getElementById('completionChart');
+  if (completionChartElement) {
+    new Chart(completionChartElement, {
+      type: 'doughnut',
+      data: {
+        labels: ['Completed', 'Incomplete'],
+        datasets: [{
+          data: dashboardData.completionData,
+          backgroundColor: [GREEN, NEUTRAL],
+          borderWidth: 0,
+          hoverOffset: 6,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        cutout: '72%',
+      },
+    });
+  }
+
+  const popularExChartElement = document.getElementById('popularExChart');
+  if (popularExChartElement) {
+    new Chart(popularExChartElement, {
+      type: 'bar',
+      data: {
+        labels: dashboardData.popularEx.labels,
+        datasets: [{
+          label: 'Logs',
+          data: dashboardData.popularEx.data,
+          backgroundColor: PALETTE.map((color) => color + 'cc'),
+          borderRadius: 6,
+          borderSkipped: false,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: GRID }, beginAtZero: true, ticks: { precision: 0 } },
+          y: { grid: { display: false } },
+        },
+      },
+    });
+  }
+
+  const categoryChartElement = document.getElementById('categoryChart');
+  if (categoryChartElement) {
+    new Chart(categoryChartElement, {
+      type: 'bar',
+      data: {
+        labels: dashboardData.category.labels,
+        datasets: [{
+          label: 'Logs',
+          data: dashboardData.category.data,
+          backgroundColor: VIOLET + 'bb',
+          borderRadius: 6,
+          borderSkipped: false,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false } },
+          y: { grid: { color: GRID }, beginAtZero: true, ticks: { precision: 0 } },
+        },
+      },
+    });
+  }
+
+  const foodChartElement = document.getElementById('foodChart');
+  if (foodChartElement) {
+    new Chart(foodChartElement, {
+      type: 'bar',
+      data: {
+        labels: dashboardData.food.labels,
+        datasets: [{
+          label: 'Logs',
+          data: dashboardData.food.data,
+          backgroundColor: ORANGE + 'bb',
+          borderRadius: 6,
+          borderSkipped: false,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: GRID }, beginAtZero: true, ticks: { precision: 0 } },
+          y: { grid: { display: false } },
+        },
+      },
+    });
+  }
+
+  const foodSourceChartElement = document.getElementById('foodSourceChart');
+  if (foodSourceChartElement) {
+    new Chart(foodSourceChartElement, {
+      type: 'pie',
+      data: {
+        labels: dashboardData.foodSource.labels,
+        datasets: [{
+          data: dashboardData.foodSource.data,
+          backgroundColor: [BLUE, CYAN],
+          borderWidth: 0,
+          hoverOffset: 8,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { padding: 16 } } },
+      },
+    });
+  }
 
   const calorieCtx = document.getElementById('calorieChart')?.getContext('2d');
   if (calorieCtx) {
@@ -242,47 +265,53 @@ document.addEventListener('DOMContentLoaded', () => {
         responsive: true,
         plugins: { legend: { display: false } },
         scales: {
-          x: { grid: { color: '#23232e' } },
-          y: { grid: { color: '#23232e' }, beginAtZero: true },
+          x: { grid: { color: GRID } },
+          y: { grid: { color: GRID }, beginAtZero: true },
         },
       },
     });
   }
 
-  new Chart(document.getElementById('goalChart'), {
-    type: 'pie',
-    data: {
-      labels: dashboardData.goal.labels,
-      datasets: [{
-        data: dashboardData.goal.data,
-        backgroundColor: PALETTE,
-        borderWidth: 0,
-        hoverOffset: 8,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom', labels: { padding: 12 } } },
-    },
-  });
+  const goalChartElement = document.getElementById('goalChart');
+  if (goalChartElement) {
+    new Chart(goalChartElement, {
+      type: 'pie',
+      data: {
+        labels: dashboardData.goal.labels,
+        datasets: [{
+          data: dashboardData.goal.data,
+          backgroundColor: PALETTE,
+          borderWidth: 0,
+          hoverOffset: 8,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { padding: 12 } } },
+      },
+    });
+  }
 
-  new Chart(document.getElementById('fitnessChart'), {
-    type: 'doughnut',
-    data: {
-      labels: dashboardData.fitness.labels,
-      datasets: [{
-        data: dashboardData.fitness.data,
-        backgroundColor: [GREEN, CYAN, VIOLET],
-        borderWidth: 0,
-        hoverOffset: 6,
-      }],
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { position: 'bottom', labels: { padding: 14 } } },
-      cutout: '60%',
-    },
-  });
+  const fitnessChartElement = document.getElementById('fitnessChart');
+  if (fitnessChartElement) {
+    new Chart(fitnessChartElement, {
+      type: 'doughnut',
+      data: {
+        labels: dashboardData.fitness.labels,
+        datasets: [{
+          data: dashboardData.fitness.data,
+          backgroundColor: [GREEN, CYAN, VIOLET],
+          borderWidth: 0,
+          hoverOffset: 6,
+        }],
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { padding: 14 } } },
+        cutout: '60%',
+      },
+    });
+  }
 
   const sections = document.querySelectorAll('section[id]');
   const navItems = document.querySelectorAll('.nav-item[href^="#"]');

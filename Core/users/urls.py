@@ -21,6 +21,7 @@ urlpatterns = [
 
     # ── Admin Dashboard ──────────────────────────────────────────────────────
     path('admin-dashboard/',   views_admin.admin_dashboard,        name='admin_dashboard'),
+    path('admin-dashboard/export/pdf/', views_admin.export_admin_dashboard_pdf, name='export_admin_dashboard_pdf'),
 
     # ── Uploads / toggles ────────────────────────────────────────────────────
     path('upload-profile-image/', views.upload_profile_image,    name='upload_profile_image'),

@@ -233,3 +233,29 @@ class MealPlanItem(models.Model):
 
     def __str__(self):
         return f"{self.meal_plan_day.day} - {self.meal_type} - {self.food.name}"
+
+
+class Feedback(models.Model):
+    CATEGORY_CHOICES = [
+        ('bug', 'Bug Report'),
+        ('feature', 'Feature Request'),
+        ('complaint', 'Complaint'),
+    ]
+
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('in_review', 'In Review'),
+        ('resolved', 'Resolved'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedback_entries')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    message = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_category_display()}"

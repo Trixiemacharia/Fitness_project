@@ -55,8 +55,6 @@ class ExerciseSerializer(serializers.ModelSerializer):
     def get_computed_work_time(self, obj): return obj.get_work_time()
     def get_computed_hiit_rest(self, obj): return obj.get_hiit_rest()
     def get_computed_rounds(self, obj):    return obj.get_rounds()
-    def get_equipment_display(self, obj):
-        return obj.equipment if obj.equipment else 'Bodyweight'
     def get_instructions_list(self, obj):  return obj.get_instructions_list()
 
     def get_rest_time_display(self, obj):
@@ -70,12 +68,14 @@ class ExerciseSerializer(serializers.ModelSerializer):
         t = obj.exercise_type
 
         if t == 'strength':
-            return [
+            stats = [
                 {'label': 'Sets',   'value': str(obj.get_sets())},
                 {'label': 'Reps',   'value': obj.get_reps()},
-                {'label': 'Weight', 'value': obj.weight or 'Bodyweight'},
                 {'label': 'Rest',   'value': self.get_rest_time_display(obj)},
             ]
+            if obj.weight:
+                stats.insert(2, {'label': 'Weight', 'value': obj.weight})
+            return stats
         elif t == 'hiit':
             return [
                 {'label': 'Work',   'value': f"{obj.get_work_time()}s"},
