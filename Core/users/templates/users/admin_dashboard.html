@@ -1,0 +1,948 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitTrack — Admin Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* ── DESIGN TOKENS ─────────────────────────────────── */
+  :root{
+    --bg:          #0a0a0f;
+    --surface:     #111118;
+    --surface2:    #18181f;
+    --border:      #23232e;
+    --accent:      #c8f135;      /* electric lime */
+    --accent2:     #7c6af7;      /* violet */
+    --accent3:     #f97316;      /* orange */
+    --accent4:     #22d3ee;      /* cyan */
+    --text:        #e8e8f0;
+    --muted:       #6b6b80;
+    --danger:      #f43f5e;
+    --success:     #4ade80;
+    --font-head:   'Syne', sans-serif;
+    --font-mono:   'DM Mono', monospace;
+    --font-body:   'Inter', sans-serif;
+    --radius:      12px;
+    --radius-lg:   20px;
+  }
+
+  /* ── RESET ──────────────────────────────────────────── */
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    min-height:100vh;
+    display:flex;
+  }
+
+  /* ── SIDEBAR ────────────────────────────────────────── */
+  .sidebar{
+    width:240px;
+    min-height:100vh;
+    background:var(--surface);
+    border-right:1px solid var(--border);
+    display:flex;
+    flex-direction:column;
+    padding:28px 0;
+    position:fixed;
+    top:0;left:0;bottom:0;
+    z-index:100;
+  }
+  .sidebar-logo{
+    padding:0 24px 32px;
+    font-family:var(--font-head);
+    font-size:1.3rem;
+    font-weight:800;
+    letter-spacing:-0.02em;
+  }
+  .sidebar-logo span{color:var(--accent);}
+  .nav-section{
+    padding:0 12px;
+    margin-bottom:8px;
+  }
+  .nav-label{
+    font-size:0.62rem;
+    font-family:var(--font-mono);
+    color:var(--muted);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    padding:0 12px;
+    margin-bottom:6px;
+    margin-top:20px;
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 12px;
+    border-radius:8px;
+    color:var(--muted);
+    text-decoration:none;
+    font-size:0.875rem;
+    font-weight:500;
+    transition:all .18s;
+    cursor:pointer;
+  }
+  .nav-item:hover,.nav-item.active{
+    background:rgba(200,241,53,.08);
+    color:var(--accent);
+  }
+  .nav-item .icon{font-size:1rem;width:20px;text-align:center;}
+  .sidebar-bottom{
+    margin-top:auto;
+    padding:16px 24px;
+    border-top:1px solid var(--border);
+  }
+  .admin-badge{
+    display:flex;align-items:center;gap:10px;
+  }
+  .admin-avatar{
+    width:32px;height:32px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent2),var(--accent));
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.75rem;font-weight:700;color:#000;
+    font-family:var(--font-head);
+  }
+  .admin-info{font-size:0.8rem;}
+  .admin-name{color:var(--text);font-weight:500;}
+  .admin-role{color:var(--muted);font-size:0.7rem;font-family:var(--font-mono);}
+
+  /* ── MAIN ───────────────────────────────────────────── */
+  .main{
+    margin-left:240px;
+    flex:1;
+    padding:36px 40px;
+    max-width:calc(100vw - 240px);
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:36px;
+  }
+  .topbar-title{
+    font-family:var(--font-head);
+    font-size:1.8rem;
+    font-weight:800;
+    letter-spacing:-0.03em;
+  }
+  .topbar-title span{color:var(--accent);}
+  .topbar-meta{
+    font-size:0.8rem;
+    color:var(--muted);
+    font-family:var(--font-mono);
+  }
+  .logout-btn{
+    padding:8px 18px;
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:8px;
+    color:var(--muted);
+    font-size:0.8rem;
+    font-family:var(--font-mono);
+    cursor:pointer;
+    text-decoration:none;
+    transition:all .18s;
+  }
+  .logout-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+  /* ── SECTION HEADINGS ───────────────────────────────── */
+  .section{margin-bottom:48px;}
+  .section-header{
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:20px;
+  }
+  .section-icon{
+    width:36px;height:36px;
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1rem;
+    flex-shrink:0;
+  }
+  .section-title{
+    font-family:var(--font-head);
+    font-size:1.1rem;
+    font-weight:700;
+    letter-spacing:-0.02em;
+  }
+  .section-sub{
+    font-size:0.78rem;
+    color:var(--muted);
+    font-family:var(--font-mono);
+  }
+
+  /* ── STAT CARDS ─────────────────────────────────────── */
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+    gap:16px;
+    margin-bottom:28px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px 22px;
+    position:relative;
+    overflow:hidden;
+    transition:border-color .2s;
+  }
+  .stat-card:hover{border-color:var(--accent2);}
+  .stat-card::before{
+    content:'';
+    position:absolute;top:0;left:0;right:0;height:2px;
+  }
+  .stat-card.lime::before{background:var(--accent);}
+  .stat-card.violet::before{background:var(--accent2);}
+  .stat-card.orange::before{background:var(--accent3);}
+  .stat-card.cyan::before{background:var(--accent4);}
+  .stat-card.red::before{background:var(--danger);}
+  .stat-card.green::before{background:var(--success);}
+
+  .stat-label{
+    font-size:0.72rem;
+    color:var(--muted);
+    font-family:var(--font-mono);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-bottom:8px;
+  }
+  .stat-value{
+    font-family:var(--font-head);
+    font-size:2rem;
+    font-weight:800;
+    letter-spacing:-0.04em;
+    line-height:1;
+  }
+  .stat-value.lime{color:var(--accent);}
+  .stat-value.violet{color:var(--accent2);}
+  .stat-value.orange{color:var(--accent3);}
+  .stat-value.cyan{color:var(--accent4);}
+  .stat-value.red{color:var(--danger);}
+  .stat-value.green{color:var(--success);}
+  .stat-note{
+    font-size:0.7rem;
+    color:var(--muted);
+    margin-top:4px;
+  }
+
+  /* ── CHART CARDS ────────────────────────────────────── */
+  .chart-grid{
+    display:grid;
+    gap:20px;
+  }
+  .chart-grid.cols-2{grid-template-columns:1fr 1fr;}
+  .chart-grid.cols-3{grid-template-columns:repeat(3,1fr);}
+  .chart-grid.cols-1-2{grid-template-columns:1fr 2fr;}
+
+  .chart-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:24px;
+  }
+  .chart-title{
+    font-family:var(--font-head);
+    font-size:0.95rem;
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .chart-desc{
+    font-size:0.72rem;
+    color:var(--muted);
+    font-family:var(--font-mono);
+    margin-bottom:20px;
+  }
+  .chart-wrap{position:relative;}
+  .chart-wrap canvas{max-height:260px;}
+  .chart-wrap.tall canvas{max-height:320px;}
+  .chart-wrap.short canvas{max-height:180px;}
+
+  /* ── TAB TOGGLE ─────────────────────────────────────── */
+  .tab-group{
+    display:flex;gap:4px;
+    background:var(--surface2);
+    padding:4px;
+    border-radius:8px;
+    margin-bottom:16px;
+    width:fit-content;
+  }
+  .tab-btn{
+    padding:6px 14px;
+    border-radius:6px;
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    font-size:0.78rem;
+    font-family:var(--font-mono);
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .tab-btn.active{
+    background:var(--accent);
+    color:#000;
+    font-weight:500;
+  }
+
+  /* ── INSIGHT PILLS ──────────────────────────────────── */
+  .insight-row{
+    display:flex;gap:10px;flex-wrap:wrap;
+    margin-top:16px;
+  }
+  .insight-pill{
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:100px;
+    padding:6px 14px;
+    font-size:0.75rem;
+    font-family:var(--font-mono);
+    color:var(--text);
+    display:flex;align-items:center;gap:6px;
+  }
+  .pill-dot{width:6px;height:6px;border-radius:50%;}
+
+  /* ── DIVIDER ────────────────────────────────────────── */
+  .divider{
+    height:1px;
+    background:var(--border);
+    margin:48px 0;
+  }
+
+  /* ── RESPONSIVE ─────────────────────────────────────── */
+  @media(max-width:1100px){
+    .chart-grid.cols-3{grid-template-columns:1fr 1fr;}
+    .chart-grid.cols-1-2{grid-template-columns:1fr;}
+  }
+  @media(max-width:768px){
+    .sidebar{display:none;}
+    .main{margin-left:0;padding:20px;}
+    .chart-grid.cols-2,.chart-grid.cols-3,.chart-grid.cols-1-2{grid-template-columns:1fr;}
+    .stat-grid{grid-template-columns:1fr 1fr;}
+  }
+
+  /* ── ANIMATE IN ─────────────────────────────────────── */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .section{animation:fadeUp .4s ease both;}
+  .section:nth-child(2){animation-delay:.08s;}
+  .section:nth-child(3){animation-delay:.16s;}
+  .section:nth-child(4){animation-delay:.24s;}
+  .section:nth-child(5){animation-delay:.32s;}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════ SIDEBAR ════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">Fit<span>Track</span></div>
+
+  <div class="nav-section">
+    <div class="nav-label">Overview</div>
+    <a class="nav-item active" href="#users">
+      <span class="icon">🧍</span> Users
+    </a>
+    <a class="nav-item" href="#workouts">
+      <span class="icon">🏋️</span> Workouts
+    </a>
+    <a class="nav-item" href="#nutrition">
+      <span class="icon">🍎</span> Nutrition
+    </a>
+    <a class="nav-item" href="#goals">
+      <span class="icon">🎯</span> Goals
+    </a>
+    <a class="nav-item" href="#feedback">
+      <span class="icon">💬</span> Feedback
+    </a>
+
+    <div class="nav-label">Management</div>
+    <a class="nav-item" href="/admin/">
+      <span class="icon">⚙️</span> Django Admin
+    </a>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="admin-badge">
+      <div class="admin-avatar">{{ request.user.username|slice:":2"|upper }}</div>
+      <div class="admin-info">
+        <div class="admin-name">{{ request.user.username }}</div>
+        <div class="admin-role">superadmin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ════════════════════════ MAIN ════════════════════════ -->
+<main class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Admin <span>Dashboard</span></div>
+      <div class="topbar-meta">{{ today }} · FitTrack Analytics</div>
+    </div>
+    <a href="{% url 'logout_user' %}" class="logout-btn">↩ Logout</a>
+  </div>
+
+
+  <!-- ══════════ 1. USER REPORTS ══════════ -->
+  <section class="section" id="users">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(200,241,53,.12);">🧍‍♀️</div>
+      <div>
+        <div class="section-title">User Reports</div>
+        <div class="section-sub">Registrations · Activity · Retention</div>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="stat-grid">
+      <div class="stat-card lime">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value lime">{{ total_users }}</div>
+        <div class="stat-note">all non-staff accounts</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-label">New Today</div>
+        <div class="stat-value cyan">{{ new_today }}</div>
+        <div class="stat-note">registered today</div>
+      </div>
+      <div class="stat-card violet">
+        <div class="stat-label">New This Week</div>
+        <div class="stat-value violet">{{ new_this_week }}</div>
+        <div class="stat-note">last 7 days</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">New This Month</div>
+        <div class="stat-value orange">{{ new_this_month }}</div>
+        <div class="stat-note">last 30 days</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">DAU</div>
+        <div class="stat-value green">{{ dau }}</div>
+        <div class="stat-note">active today</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-label">MAU</div>
+        <div class="stat-value cyan">{{ mau }}</div>
+        <div class="stat-note">active last 30d</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Retained</div>
+        <div class="stat-value green">{{ retained_users }}</div>
+        <div class="stat-note">came back after 30d</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Churned</div>
+        <div class="stat-value red">{{ churned_users }}</div>
+        <div class="stat-note">inactive old users</div>
+      </div>
+    </div>
+
+    <!-- Registration growth chart with period tabs -->
+    <div class="chart-card" style="margin-bottom:20px;">
+      <div class="chart-title">Registration Growth</div>
+      <div class="chart-desc">New signups over time</div>
+      <div class="tab-group">
+        <button class="tab-btn active" onclick="switchRegChart('daily',this)">Daily</button>
+        <button class="tab-btn" onclick="switchRegChart('weekly',this)">Weekly</button>
+        <button class="tab-btn" onclick="switchRegChart('monthly',this)">Monthly</button>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="regChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Active vs inactive -->
+    <div class="chart-grid cols-2">
+      <div class="chart-card">
+        <div class="chart-title">Active vs Inactive Users</div>
+        <div class="chart-desc">Based on workout activity (last 30 days)</div>
+        <div class="chart-wrap short">
+          <canvas id="activeChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Retention vs Churn</div>
+        <div class="chart-desc">Users who joined >30d ago</div>
+        <div class="chart-wrap short">
+          <canvas id="retentionChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ══════════ 2. WORKOUT REPORTS ══════════ -->
+  <section class="section" id="workouts">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(124,106,247,.12);">🏋️</div>
+      <div>
+        <div class="section-title">Workout & Activity Reports</div>
+        <div class="section-sub">Popular exercises · Completion · Categories</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card violet">
+        <div class="stat-label">Avg Workouts / User</div>
+        <div class="stat-value violet">{{ avg_workouts_per_user }}</div>
+        <div class="stat-note">exercise logs per user</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Completion Rate</div>
+        <div class="stat-value green">{{ completion_rate }}%</div>
+        <div class="stat-note">sets completed as planned</div>
+      </div>
+    </div>
+
+    <div class="chart-grid cols-1-2">
+      <div class="chart-card">
+        <div class="chart-title">Workout Completion</div>
+        <div class="chart-desc">Completed vs in-progress sessions</div>
+        <div class="chart-wrap">
+          <canvas id="completionChart"></canvas>
+        </div>
+        <div class="insight-row">
+          <div class="insight-pill">
+            <div class="pill-dot" style="background:var(--success);"></div>
+            Completed {{ completion_rate }}%
+          </div>
+          <div class="insight-pill">
+            <div class="pill-dot" style="background:var(--border);"></div>
+            Incomplete {{ not_completed }}%
+          </div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Most Popular Exercises</div>
+        <div class="chart-desc">Ranked by number of logs</div>
+        <div class="chart-wrap tall">
+          <canvas id="popularExChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:20px;"></div>
+
+    <div class="chart-card">
+      <div class="chart-title">Workout Category Breakdown</div>
+      <div class="chart-desc">Log distribution across training categories</div>
+      <div class="chart-wrap short">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ══════════ 3. NUTRITION REPORTS ══════════ -->
+  <section class="section" id="nutrition">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(249,115,22,.12);">🍎</div>
+      <div>
+        <div class="section-title">Nutrition Reports</div>
+        <div class="section-sub">Food logs · Calories · Custom foods</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card orange">
+        <div class="stat-label">Avg Calories / User / Day</div>
+        <div class="stat-value orange">{{ avg_calories_per_user|floatformat:0 }}</div>
+        <div class="stat-note">last 30 days</div>
+      </div>
+      <div class="stat-card lime">
+        <div class="stat-label">Custom Foods</div>
+        <div class="stat-value lime">{{ custom_food_count }}</div>
+        <div class="stat-note">user-created entries</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-label">Database Foods</div>
+        <div class="stat-value cyan">{{ db_food_count }}</div>
+        <div class="stat-note">local + USDA</div>
+      </div>
+    </div>
+
+    <div class="chart-grid cols-2">
+      <div class="chart-card">
+        <div class="chart-title">Most Logged Foods</div>
+        <div class="chart-desc">Top foods by log frequency</div>
+        <div class="chart-wrap tall">
+          <canvas id="foodChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Custom vs Database Foods</div>
+        <div class="chart-desc">Food source distribution</div>
+        <div class="chart-wrap">
+          <canvas id="foodSourceChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:20px;"></div>
+
+    <div class="chart-card">
+      <div class="chart-title">Daily Calorie Intake Trend</div>
+      <div class="chart-desc">Total calories logged across all users — last 30 days</div>
+      <div class="chart-wrap">
+        <canvas id="calorieChart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ══════════ 4. GOAL TRACKING ══════════ -->
+  <section class="section" id="goals">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(34,211,238,.12);">🎯</div>
+      <div>
+        <div class="section-title">Goal Tracking Reports</div>
+        <div class="section-sub">Goals · Fitness levels · Distribution</div>
+      </div>
+    </div>
+
+    <div class="chart-grid cols-2">
+      <div class="chart-card">
+        <div class="chart-title">User Goal Distribution</div>
+        <div class="chart-desc">What users are aiming for</div>
+        <div class="chart-wrap">
+          <canvas id="goalChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Fitness Level Breakdown</div>
+        <div class="chart-desc">Beginner / Intermediate / Advanced split</div>
+        <div class="chart-wrap">
+          <canvas id="fitnessChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ══════════ 5. FEEDBACK (placeholder) ══════════ -->
+  <section class="section" id="feedback">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(244,63,94,.12);">💬</div>
+      <div>
+        <div class="section-title">Feedback & Complaints</div>
+        <div class="section-sub">Feature requests · Bug reports</div>
+      </div>
+    </div>
+
+    <div class="chart-card" style="padding:40px;text-align:center;">
+      <div style="font-size:2.5rem;margin-bottom:12px;">📬</div>
+      <div style="font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:8px;">
+        Feedback Module
+      </div>
+      <div style="font-size:0.82rem;color:var(--muted);max-width:380px;margin:0 auto;">
+        Add a <code style="color:var(--accent);font-family:var(--font-mono);">Feedback</code> model to your app
+        and wire it here. Suggested fields: <em>category</em> (bug / feature / complaint),
+        <em>message</em>, <em>status</em>, <em>created_at</em>.
+      </div>
+      <div class="insight-row" style="justify-content:center;margin-top:20px;">
+        <div class="insight-pill"><div class="pill-dot" style="background:var(--danger);"></div>Bug Reports</div>
+        <div class="insight-pill"><div class="pill-dot" style="background:var(--accent2);"></div>Feature Requests</div>
+        <div class="insight-pill"><div class="pill-dot" style="background:var(--accent3);"></div>Complaints</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ════════════════════════ CHART.JS ════════════════════════ -->
+<script>
+/* ── Data from Django ────────────────────────────── */
+const REG = {
+  daily:   { labels: {{ reg_labels|safe }},          data: {{ reg_data|safe }} },
+  weekly:  { labels: {{ weekly_reg_labels|safe }},   data: {{ weekly_reg_data|safe }} },
+  monthly: { labels: {{ monthly_reg_labels|safe }},  data: {{ monthly_reg_data|safe }} },
+};
+const ACTIVE_DATA      = [{{ active_users }},    {{ inactive_users }}];
+const RETENTION_DATA   = [{{ retained_users }},  {{ churned_users }}];
+const COMPLETION_DATA  = [{{ completion_rate }}, {{ not_completed }}];
+const POPULAR_EX       = { labels: {{ popular_ex_labels|safe }}, data: {{ popular_ex_data|safe }} };
+const CATEGORY         = { labels: {{ category_labels|safe }},   data: {{ category_data|safe }} };
+const FOOD             = { labels: {{ food_labels|safe }},        data: {{ food_data|safe }} };
+const FOOD_SOURCE      = { labels: ['Custom','Database'],          data: [{{ custom_food_count }}, {{ db_food_count }}] };
+const CALORIES         = { labels: {{ daily_calorie_labels|safe }}, data: {{ daily_calorie_data|safe }} };
+const GOAL             = { labels: {{ goal_labels|safe }},          data: {{ goal_data|safe }} };
+const FITNESS          = { labels: {{ fitness_labels|safe }},       data: {{ fitness_data|safe }} };
+
+/* ── Shared Chart defaults ───────────────────────── */
+Chart.defaults.color          = '#6b6b80';
+Chart.defaults.borderColor    = '#23232e';
+Chart.defaults.font.family    = "'DM Mono', monospace";
+Chart.defaults.font.size      = 11;
+
+const LIME   = '#c8f135';
+const VIOLET = '#7c6af7';
+const ORANGE = '#f97316';
+const CYAN   = '#22d3ee';
+const RED    = '#f43f5e';
+const GREEN  = '#4ade80';
+const PALETTE = [LIME, VIOLET, ORANGE, CYAN, RED, GREEN, '#fb923c', '#a78bfa', '#34d399', '#f472b6'];
+
+function makeGradient(ctx, color){
+  const g = ctx.createLinearGradient(0, 0, 0, 260);
+  g.addColorStop(0, color + '55');
+  g.addColorStop(1, color + '00');
+  return g;
+}
+
+/* ── 1a. Registration growth (line, switchable) ── */
+const regCtx = document.getElementById('regChart').getContext('2d');
+let regChart = new Chart(regCtx, {
+  type:'line',
+  data:{
+    labels: REG.daily.labels,
+    datasets:[{
+      label:'New Users',
+      data: REG.daily.data,
+      borderColor: LIME,
+      backgroundColor: makeGradient(regCtx, LIME),
+      borderWidth:2,
+      pointBackgroundColor: LIME,
+      pointRadius:3,
+      tension:.4,
+      fill:true,
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{color:'#23232e'}},
+      y:{grid:{color:'#23232e'}, beginAtZero:true, ticks:{precision:0}},
+    }
+  }
+});
+
+function switchRegChart(period, btn){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  regChart.data.labels = REG[period].labels;
+  regChart.data.datasets[0].data = REG[period].data;
+  regChart.update();
+}
+
+/* ── 1b. Active vs Inactive ── */
+new Chart(document.getElementById('activeChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Active','Inactive'],
+    datasets:[{data:ACTIVE_DATA, backgroundColor:[GREEN, '#23232e'], borderWidth:0, hoverOffset:6}]
+  },
+  options:{
+    responsive:true,
+    plugins:{
+      legend:{position:'bottom', labels:{padding:16}},
+      tooltip:{callbacks:{label:c=>' '+c.parsed+' users'}}
+    },
+    cutout:'70%',
+  }
+});
+
+/* ── 1c. Retention ── */
+new Chart(document.getElementById('retentionChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Retained','Churned'],
+    datasets:[{data:RETENTION_DATA, backgroundColor:[CYAN, RED], borderWidth:0, hoverOffset:6}]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom', labels:{padding:16}}},
+    cutout:'70%',
+  }
+});
+
+/* ── 2a. Completion donut ── */
+new Chart(document.getElementById('completionChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Completed','Incomplete'],
+    datasets:[{data:COMPLETION_DATA, backgroundColor:[GREEN,'#23232e'], borderWidth:0, hoverOffset:6}]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    cutout:'72%',
+  }
+});
+
+/* ── 2b. Popular exercises (horizontal bar) ── */
+new Chart(document.getElementById('popularExChart'),{
+  type:'bar',
+  data:{
+    labels: POPULAR_EX.labels,
+    datasets:[{
+      label:'Logs',
+      data: POPULAR_EX.data,
+      backgroundColor: PALETTE.map(c=>c+'cc'),
+      borderRadius:6,
+      borderSkipped:false,
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{color:'#23232e'}, beginAtZero:true, ticks:{precision:0}},
+      y:{grid:{display:false}},
+    }
+  }
+});
+
+/* ── 2c. Category breakdown (bar) ── */
+new Chart(document.getElementById('categoryChart'),{
+  type:'bar',
+  data:{
+    labels: CATEGORY.labels,
+    datasets:[{
+      label:'Logs',
+      data: CATEGORY.data,
+      backgroundColor: VIOLET+'bb',
+      borderRadius:6,
+      borderSkipped:false,
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{display:false}},
+      y:{grid:{color:'#23232e'}, beginAtZero:true, ticks:{precision:0}},
+    }
+  }
+});
+
+/* ── 3a. Most logged foods (horizontal bar) ── */
+new Chart(document.getElementById('foodChart'),{
+  type:'bar',
+  data:{
+    labels: FOOD.labels,
+    datasets:[{
+      label:'Logs',
+      data: FOOD.data,
+      backgroundColor: ORANGE+'bb',
+      borderRadius:6,
+      borderSkipped:false,
+    }]
+  },
+  options:{
+    indexAxis:'y',
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{color:'#23232e'}, beginAtZero:true, ticks:{precision:0}},
+      y:{grid:{display:false}},
+    }
+  }
+});
+
+/* ── 3b. Food source pie ── */
+new Chart(document.getElementById('foodSourceChart'),{
+  type:'pie',
+  data:{
+    labels: FOOD_SOURCE.labels,
+    datasets:[{
+      data: FOOD_SOURCE.data,
+      backgroundColor:[LIME, CYAN],
+      borderWidth:0,
+      hoverOffset:8,
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom', labels:{padding:16}}},
+  }
+});
+
+/* ── 3c. Daily calorie trend (area line) ── */
+const calCtx = document.getElementById('calorieChart').getContext('2d');
+new Chart(calCtx,{
+  type:'line',
+  data:{
+    labels: CALORIES.labels,
+    datasets:[{
+      label:'Total Calories',
+      data: CALORIES.data,
+      borderColor: ORANGE,
+      backgroundColor: makeGradient(calCtx, ORANGE),
+      borderWidth:2,
+      pointRadius:2,
+      tension:.4,
+      fill:true,
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      x:{grid:{color:'#23232e'}},
+      y:{grid:{color:'#23232e'}, beginAtZero:true},
+    }
+  }
+});
+
+/* ── 4a. Goal distribution (pie) ── */
+new Chart(document.getElementById('goalChart'),{
+  type:'pie',
+  data:{
+    labels: GOAL.labels,
+    datasets:[{
+      data: GOAL.data,
+      backgroundColor: PALETTE,
+      borderWidth:0,
+      hoverOffset:8,
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom', labels:{padding:12}}},
+  }
+});
+
+/* ── 4b. Fitness level (doughnut) ── */
+new Chart(document.getElementById('fitnessChart'),{
+  type:'doughnut',
+  data:{
+    labels: FITNESS.labels,
+    datasets:[{
+      data: FITNESS.data,
+      backgroundColor:[GREEN, CYAN, VIOLET],
+      borderWidth:0,
+      hoverOffset:6,
+    }]
+  },
+  options:{
+    responsive:true,
+    plugins:{legend:{position:'bottom', labels:{padding:14}}},
+    cutout:'60%',
+  }
+});
+
+/* ── Sidebar active link on scroll ── */
+const sections = document.querySelectorAll('section[id]');
+const navItems = document.querySelectorAll('.nav-item[href^="#"]');
+window.addEventListener('scroll',()=>{
+  let current='';
+  sections.forEach(s=>{
+    if(window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  navItems.forEach(a=>{
+    a.classList.toggle('active', a.getAttribute('href')==='#'+current);
+  });
+},{passive:true});
+</script>
+</body>
+</html>
