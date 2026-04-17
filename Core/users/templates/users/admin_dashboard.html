@@ -446,9 +446,9 @@
       <div class="chart-title">Registration Growth</div>
       <div class="chart-desc">New signups over time</div>
       <div class="tab-group">
-        <button class="tab-btn active" onclick="switchRegChart('daily',this)">Daily</button>
-        <button class="tab-btn" onclick="switchRegChart('weekly',this)">Weekly</button>
-        <button class="tab-btn" onclick="switchRegChart('monthly',this)">Monthly</button>
+        <button class="tab-btn active" type="button" data-reg-period="daily">Daily</button>
+        <button class="tab-btn" type="button" data-reg-period="weekly">Weekly</button>
+        <button class="tab-btn" type="button" data-reg-period="monthly">Monthly</button>
       </div>
       <div class="chart-wrap">
         <canvas id="regChart"></canvas>
@@ -657,292 +657,25 @@
 
 </main>
 
-<!-- ════════════════════════ CHART.JS ════════════════════════ -->
-<script>
-/* ── Data from Django ────────────────────────────── */
-const REG = {
-  daily:   { labels: {{ reg_labels|safe }},          data: {{ reg_data|safe }} },
-  weekly:  { labels: {{ weekly_reg_labels|safe }},   data: {{ weekly_reg_data|safe }} },
-  monthly: { labels: {{ monthly_reg_labels|safe }},  data: {{ monthly_reg_data|safe }} },
-};
-const ACTIVE_DATA      = [{{ active_users }},    {{ inactive_users }}];
-const RETENTION_DATA   = [{{ retained_users }},  {{ churned_users }}];
-const COMPLETION_DATA  = [{{ completion_rate }}, {{ not_completed }}];
-const POPULAR_EX       = { labels: {{ popular_ex_labels|safe }}, data: {{ popular_ex_data|safe }} };
-const CATEGORY         = { labels: {{ category_labels|safe }},   data: {{ category_data|safe }} };
-const FOOD             = { labels: {{ food_labels|safe }},        data: {{ food_data|safe }} };
-const FOOD_SOURCE      = { labels: ['Custom','Database'],          data: [{{ custom_food_count }}, {{ db_food_count }}] };
-const CALORIES         = { labels: {{ daily_calorie_labels|safe }}, data: {{ daily_calorie_data|safe }} };
-const GOAL             = { labels: {{ goal_labels|safe }},          data: {{ goal_data|safe }} };
-const FITNESS          = { labels: {{ fitness_labels|safe }},       data: {{ fitness_data|safe }} };
-
-/* ── Shared Chart defaults ───────────────────────── */
-Chart.defaults.color          = '#6b6b80';
-Chart.defaults.borderColor    = '#23232e';
-Chart.defaults.font.family    = "'DM Mono', monospace";
-Chart.defaults.font.size      = 11;
-
-const LIME   = '#c8f135';
-const VIOLET = '#7c6af7';
-const ORANGE = '#f97316';
-const CYAN   = '#22d3ee';
-const RED    = '#f43f5e';
-const GREEN  = '#4ade80';
-const PALETTE = [LIME, VIOLET, ORANGE, CYAN, RED, GREEN, '#fb923c', '#a78bfa', '#34d399', '#f472b6'];
-
-function makeGradient(ctx, color){
-  const g = ctx.createLinearGradient(0, 0, 0, 260);
-  g.addColorStop(0, color + '55');
-  g.addColorStop(1, color + '00');
-  return g;
+<script id="admin-dashboard-data" type="application/json">
+{
+  "reg": {
+    "daily": { "labels": {{ reg_labels|safe }}, "data": {{ reg_data|safe }} },
+    "weekly": { "labels": {{ weekly_reg_labels|safe }}, "data": {{ weekly_reg_data|safe }} },
+    "monthly": { "labels": {{ monthly_reg_labels|safe }}, "data": {{ monthly_reg_data|safe }} }
+  },
+  "activeData": [{{ active_users }}, {{ inactive_users }}],
+  "retentionData": [{{ retained_users }}, {{ churned_users }}],
+  "completionData": [{{ completion_rate }}, {{ not_completed }}],
+  "popularEx": { "labels": {{ popular_ex_labels|safe }}, "data": {{ popular_ex_data|safe }} },
+  "category": { "labels": {{ category_labels|safe }}, "data": {{ category_data|safe }} },
+  "food": { "labels": {{ food_labels|safe }}, "data": {{ food_data|safe }} },
+  "foodSource": { "labels": ["Custom", "Database"], "data": [{{ custom_food_count }}, {{ db_food_count }}] },
+  "calories": { "labels": {{ daily_calorie_labels|safe }}, "data": {{ daily_calorie_data|safe }} },
+  "goal": { "labels": {{ goal_labels|safe }}, "data": {{ goal_data|safe }} },
+  "fitness": { "labels": {{ fitness_labels|safe }}, "data": {{ fitness_data|safe }} }
 }
-
-/* ── 1a. Registration growth (line, switchable) ── */
-const regCtx = document.getElementById('regChart').getContext('2d');
-let regChart = new Chart(regCtx, {
-  type:'line',
-  data:{
-    labels: REG.daily.labels,
-    datasets:[{
-      label:'New Users',
-      data: REG.daily.data,
-      borderColor: LIME,
-      backgroundColor: makeGradient(regCtx, LIME),
-      borderWidth:2,
-      pointBackgroundColor: LIME,
-      pointRadius:3,
-      tension:.4,
-      fill:true,
-    }]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{grid:{color:'#23232e'}},
-      y:{grid:{color:'#23232e'}, beginAtZero:true, ticks:{precision:0}},
-    }
-  }
-});
-
-function switchRegChart(period, btn){
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  regChart.data.labels = REG[period].labels;
-  regChart.data.datasets[0].data = REG[period].data;
-  regChart.update();
-}
-
-/* ── 1b. Active vs Inactive ── */
-new Chart(document.getElementById('activeChart'),{
-  type:'doughnut',
-  data:{
-    labels:['Active','Inactive'],
-    datasets:[{data:ACTIVE_DATA, backgroundColor:[GREEN, '#23232e'], borderWidth:0, hoverOffset:6}]
-  },
-  options:{
-    responsive:true,
-    plugins:{
-      legend:{position:'bottom', labels:{padding:16}},
-      tooltip:{callbacks:{label:c=>' '+c.parsed+' users'}}
-    },
-    cutout:'70%',
-  }
-});
-
-/* ── 1c. Retention ── */
-new Chart(document.getElementById('retentionChart'),{
-  type:'doughnut',
-  data:{
-    labels:['Retained','Churned'],
-    datasets:[{data:RETENTION_DATA, backgroundColor:[CYAN, RED], borderWidth:0, hoverOffset:6}]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{position:'bottom', labels:{padding:16}}},
-    cutout:'70%',
-  }
-});
-
-/* ── 2a. Completion donut ── */
-new Chart(document.getElementById('completionChart'),{
-  type:'doughnut',
-  data:{
-    labels:['Completed','Incomplete'],
-    datasets:[{data:COMPLETION_DATA, backgroundColor:[GREEN,'#23232e'], borderWidth:0, hoverOffset:6}]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{display:false}},
-    cutout:'72%',
-  }
-});
-
-/* ── 2b. Popular exercises (horizontal bar) ── */
-new Chart(document.getElementById('popularExChart'),{
-  type:'bar',
-  data:{
-    labels: POPULAR_EX.labels,
-    datasets:[{
-      label:'Logs',
-      data: POPULAR_EX.data,
-      backgroundColor: PALETTE.map(c=>c+'cc'),
-      borderRadius:6,
-      borderSkipped:false,
-    }]
-  },
-  options:{
-    indexAxis:'y',
-    responsive:true,
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{grid:{color:'#23232e'}, beginAtZero:true, ticks:{precision:0}},
-      y:{grid:{display:false}},
-    }
-  }
-});
-
-/* ── 2c. Category breakdown (bar) ── */
-new Chart(document.getElementById('categoryChart'),{
-  type:'bar',
-  data:{
-    labels: CATEGORY.labels,
-    datasets:[{
-      label:'Logs',
-      data: CATEGORY.data,
-      backgroundColor: VIOLET+'bb',
-      borderRadius:6,
-      borderSkipped:false,
-    }]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{grid:{display:false}},
-      y:{grid:{color:'#23232e'}, beginAtZero:true, ticks:{precision:0}},
-    }
-  }
-});
-
-/* ── 3a. Most logged foods (horizontal bar) ── */
-new Chart(document.getElementById('foodChart'),{
-  type:'bar',
-  data:{
-    labels: FOOD.labels,
-    datasets:[{
-      label:'Logs',
-      data: FOOD.data,
-      backgroundColor: ORANGE+'bb',
-      borderRadius:6,
-      borderSkipped:false,
-    }]
-  },
-  options:{
-    indexAxis:'y',
-    responsive:true,
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{grid:{color:'#23232e'}, beginAtZero:true, ticks:{precision:0}},
-      y:{grid:{display:false}},
-    }
-  }
-});
-
-/* ── 3b. Food source pie ── */
-new Chart(document.getElementById('foodSourceChart'),{
-  type:'pie',
-  data:{
-    labels: FOOD_SOURCE.labels,
-    datasets:[{
-      data: FOOD_SOURCE.data,
-      backgroundColor:[LIME, CYAN],
-      borderWidth:0,
-      hoverOffset:8,
-    }]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{position:'bottom', labels:{padding:16}}},
-  }
-});
-
-/* ── 3c. Daily calorie trend (area line) ── */
-const calCtx = document.getElementById('calorieChart').getContext('2d');
-new Chart(calCtx,{
-  type:'line',
-  data:{
-    labels: CALORIES.labels,
-    datasets:[{
-      label:'Total Calories',
-      data: CALORIES.data,
-      borderColor: ORANGE,
-      backgroundColor: makeGradient(calCtx, ORANGE),
-      borderWidth:2,
-      pointRadius:2,
-      tension:.4,
-      fill:true,
-    }]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{display:false}},
-    scales:{
-      x:{grid:{color:'#23232e'}},
-      y:{grid:{color:'#23232e'}, beginAtZero:true},
-    }
-  }
-});
-
-/* ── 4a. Goal distribution (pie) ── */
-new Chart(document.getElementById('goalChart'),{
-  type:'pie',
-  data:{
-    labels: GOAL.labels,
-    datasets:[{
-      data: GOAL.data,
-      backgroundColor: PALETTE,
-      borderWidth:0,
-      hoverOffset:8,
-    }]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{position:'bottom', labels:{padding:12}}},
-  }
-});
-
-/* ── 4b. Fitness level (doughnut) ── */
-new Chart(document.getElementById('fitnessChart'),{
-  type:'doughnut',
-  data:{
-    labels: FITNESS.labels,
-    datasets:[{
-      data: FITNESS.data,
-      backgroundColor:[GREEN, CYAN, VIOLET],
-      borderWidth:0,
-      hoverOffset:6,
-    }]
-  },
-  options:{
-    responsive:true,
-    plugins:{legend:{position:'bottom', labels:{padding:14}}},
-    cutout:'60%',
-  }
-});
-
-/* ── Sidebar active link on scroll ── */
-const sections = document.querySelectorAll('section[id]');
-const navItems = document.querySelectorAll('.nav-item[href^="#"]');
-window.addEventListener('scroll',()=>{
-  let current='';
-  sections.forEach(s=>{
-    if(window.scrollY >= s.offsetTop - 120) current = s.id;
-  });
-  navItems.forEach(a=>{
-    a.classList.toggle('active', a.getAttribute('href')==='#'+current);
-  });
-},{passive:true});
 </script>
+<script src="{% static 'js/admin_dashboard.js' %}"></script>
 </body>
 </html>
