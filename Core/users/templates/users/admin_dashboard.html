@@ -322,48 +322,16 @@
       </div>
     </div>
 
-    <div class="stat-grid">
-      <div class="stat-card blue">
-        <div class="stat-label">Total Feedback</div>
-        <div class="stat-value blue">{{ feedback_total }}</div>
-        <div class="stat-note">all user submissions</div>
-      </div>
-      <div class="stat-card red">
-        <div class="stat-label">Bug Reports</div>
-        <div class="stat-value red">{{ bug_feedback_count }}</div>
-        <div class="stat-note">issues reported by users</div>
-      </div>
-      <div class="stat-card violet">
-        <div class="stat-label">Feature Requests</div>
-        <div class="stat-value violet">{{ feature_feedback_count }}</div>
-        <div class="stat-note">requested improvements</div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-label">Complaints</div>
-        <div class="stat-value orange">{{ complaint_feedback_count }}</div>
-        <div class="stat-note">experience concerns</div>
-      </div>
-    </div>
-
     <div class="chart-card feedback-card">
-      <div class="feedback-title">Recent Feedback</div>
-      {% if recent_feedback %}
-      <div class="feedback-list">
-        {% for item in recent_feedback %}
-        <article class="feedback-item">
-          <div class="feedback-item-meta">
-            <span class="feedback-user">{{ item.user.username }}</span>
-            <span class="feedback-badge category-{{ item.category }}">{{ item.get_category_display }}</span>
-            <span class="feedback-badge status-{{ item.status }}">{{ item.get_status_display }}</span>
-            <span class="feedback-date">{{ item.created_at|date:"Y-m-d H:i" }}</span>
-          </div>
-          <p class="feedback-message">{{ item.message }}</p>
-        </article>
-        {% endfor %}
+      <div class="feedback-title">Feedback Module</div>
+      <div class="feedback-copy">
+        Add a <code>Feedback</code>
       </div>
-      {% else %}
-      <div class="feedback-copy">No feedback has been submitted yet.</div>
-      {% endif %}
+      <div class="insight-row centered">
+        <div class="insight-pill"><div class="pill-dot danger"></div>Bug Reports</div>
+        <div class="insight-pill"><div class="pill-dot violet"></div>Feature Requests</div>
+        <div class="insight-pill"><div class="pill-dot orange"></div>Complaints</div>
+      </div>
     </div>
   </section>
   {% endif %}

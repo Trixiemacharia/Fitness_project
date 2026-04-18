@@ -96,8 +96,8 @@ def workout_consistency(request):
         sets_completed__gt=0
     ).values('updated_at__date').annotate(count=Count('id')).order_by('updated_at__date')
 
-    # Build a set of active dates
-    active_dates = {entry['updated_at__date'] for entry in logs}
+    log_counts_by_date = {entry['updated_at__date']: entry['count'] for entry in logs}
+    active_dates = set(log_counts_by_date.keys())
 
     # Generate last 12 weeks (84 days)
     today = date.today()
@@ -110,9 +110,17 @@ def workout_consistency(request):
             week_data.append({
                 'date':   day.isoformat(),
                 'active': day in active_dates,
-                'count':  next((e['count'] for e in logs if e['updated_at__date'] == day), 0),
+                'count':  log_counts_by_date.get(day, 0),
             })
         weeks.append(week_data)
+
+    weekly_workouts = []
+    for week in weeks:
+        week_start = week[0]['date']
+        weekly_workouts.append({
+            'label': week_start,
+            'count': sum(day['count'] for day in week),
+        })
 
     # Streaks
     all_dates  = sorted(active_dates)
@@ -135,12 +143,17 @@ def workout_consistency(request):
         current += 1
         check -= timedelta(days=1)
 
+    total_sessions = sum(log_counts_by_date.values())
+    avg_weekly_workouts = round(total_sessions / max(len(weekly_workouts), 1), 1)
+
     return Response({
         'weeks':           weeks,
         'current_streak':  current,
         'longest_streak':  longest,
-        'total_workouts':  len(active_dates),
-        'active_this_week': sum(1 for d in active_dates if (today - d).days < 7),
+        'total_workouts':  total_sessions,
+        'active_this_week': sum(log_counts_by_date.get(today - timedelta(days=i), 0) for i in range(7)),
+        'weekly_workouts': weekly_workouts,
+        'avg_weekly_workouts': avg_weekly_workouts,
     })
 
 # STRENGTH LOGS

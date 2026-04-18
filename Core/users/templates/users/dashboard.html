@@ -166,9 +166,14 @@
                 <span class="stat-card-sub">sessions</span>
             </div>
             <div class="stat-card">
-                <span class="stat-card-label">This Week</span>
+                <span class="stat-card-label">Workouts This Week</span>
                 <span class="stat-card-value" id="stat-this-week">—</span>
-                <span class="stat-card-sub">active days</span>
+                <span class="stat-card-sub">sessions</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-card-label">Workouts / Week</span>
+                <span class="stat-card-value" id="stat-weekly-average">--</span>
+                <span class="stat-card-sub">average</span>
             </div>
         </div>
 
@@ -182,14 +187,24 @@
             </div>
         </div>
 
-        <!-- Weight -->
-        <div class="progress-section">
-            <div class="progress-section-header">
-                <span class="progress-section-title">Weight</span>
-                <button class="log-btn" onclick="openLogModal('weight')">+ Log</button>
-            </div>u
-            <div class="chart-wrap">
-                <canvas id="weight-chart"></canvas>
+        <div class="progress-grid progress-grid-dual">
+            <div class="progress-section">
+                <div class="progress-section-header">
+                    <span class="progress-section-title">Weight Progress Graph</span>
+                    <button class="log-btn" onclick="openLogModal('weight')">+ Log</button>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="weight-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="progress-section">
+                <div class="progress-section-header">
+                    <span class="progress-section-title">Number of Workouts Per Week</span>
+                </div>
+                <div class="chart-wrap">
+                    <canvas id="weekly-workouts-chart"></canvas>
+                </div>
             </div>
         </div>
 
@@ -204,23 +219,22 @@
             </div>
         </div>
 
-        <!-- Strength -->
         <div class="progress-section">
             <div class="progress-section-header">
-                <span class="progress-section-title">Strength Gains</span>
-                <button class="log-btn" onclick="openLogModal('strength'); populateStrengthSelect();">+ Log</button>
+                <span class="progress-section-title">Before vs After Comparison</span>
+                <button class="log-btn" onclick="openLogModal('photo')">+ Add Photo</button>
             </div>
-            <div class="chart-wrap">
-                <canvas id="strength-chart"></canvas>
+            <div class="comparison-grid">
+                <div class="comparison-card" id="before-photo-card">
+                    <div class="comparison-label">Before</div>
+                    <div class="comparison-photo-empty">Add a photo labeled before to compare your transformation.</div>
+                </div>
+                <div class="comparison-card" id="after-photo-card">
+                    <div class="comparison-label">After</div>
+                    <div class="comparison-photo-empty">Add a photo labeled after to see your progress side by side.</div>
+                </div>
             </div>
-        </div>
-
-        <!-- Before / After Photos -->
-        <div class="progress-section">
-            <div class="progress-section-header">
-                <span class="progress-section-title">Progress Photos</span>
-            </div>
-            <div id="photos-grid" class="photos-grid">
+            <div id="photos-grid" class="photos-grid progress-photo-strip">
                 <button class="add-photo-btn" onclick="openLogModal('photo')">
                     <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                     Add Photo
