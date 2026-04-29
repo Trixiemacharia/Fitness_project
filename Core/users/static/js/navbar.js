@@ -35,7 +35,8 @@ const screens  = document.querySelectorAll('.spa-screen');
 const navLinks = document.querySelectorAll('.nav-link');
 
 const screenTitles = {
-    'dashboard-screen': 'My <span>Workouts</span>',
+    'dashboard-screen': 'My <span>Dashboard</span>',
+    'dashboard-workouts-screen': 'My<span>Workouts</span>',
     'progress-screen':  'My <span>Progress</span>',
     'nutrition-screen': 'My<span>Nutrition</span>',
     'profile-screen':   'My <span>Profile</span>',
@@ -58,6 +59,7 @@ function switchScreen(screenId) {
         topBarTitle.innerHTML = screenTitles[screenId];
     }
 
+    if(screenId === 'dashboard-screen') loadHomeDashboard();
     if (screenId === 'progress-screen') loadProgressScreen();
     if (screenId === 'profile-screen')  loadProfileScreen();
     if(screenId === 'nutrition-screen') loadMealPlan();
@@ -104,7 +106,8 @@ function applyTheme(dark) {
 
 // Load saved theme on init
 document.addEventListener('DOMContentLoaded', () => {
-    const savedDark = localStorage.getItem('darkMode') !== 'false';
+    const savedTheme = localStorage.getItem('darkMode');
+    const savedDark = savedTheme === null ? false : savedTheme === 'true';
     applyTheme(savedDark);
 
     const toggle = document.getElementById('pref-dark-mode');

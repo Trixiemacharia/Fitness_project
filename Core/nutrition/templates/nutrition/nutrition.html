@@ -142,6 +142,18 @@
             <span class="nutr-card-title">📋 My Meal Plan</span>
             <span id="nutr-plan-goal" class="nutr-count-badge"></span>
         </div>
+        <div class="settings-row" style="padding:0 0 16px 0;">
+            <div class="settings-row-left">
+                <div>
+                    <div class="settings-row-label">Meal plan enabled</div>
+                    <div class="settings-row-sub">Visible when your nutrition goal includes a meal plan</div>
+                </div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" {% if profile.wants_meal_plan %}checked{% endif %} disabled>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
 
         <div class="nutr-day-tabs">
             <button class="nutr-day-tab active" data-day="monday">Mon</button>

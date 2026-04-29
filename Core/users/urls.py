@@ -1,7 +1,8 @@
 from django.urls import path
 from . import views, views_onboarding, progress_views
 from users.authentication import views_auth
-from users.authentication import views_admin   # <-- new
+from users.authentication import views_admin  
+
 
 urlpatterns = [
     # ── Auth ────────────────────────────────────────────────────────────────
@@ -18,9 +19,13 @@ urlpatterns = [
     # ── User Dashboard ───────────────────────────────────────────────────────
     path('dashboard/',         views.dashboard,                   name='dashboard'),
     path('dashboard/search/',  views.search_dashboard_workouts,   name='search_dashboard_workouts'),
+    path('dashboard/summary/', views.dashboard_summary,           name='dashboard_summary'),
+    path('dashboard/feedback/', views.feedback_entries,           name='dashboard_feedback'),
+    path('dashboard/progress-log/', views.progress_log_entry,     name='dashboard_progress_log'),
 
     # ── Admin Dashboard ──────────────────────────────────────────────────────
     path('admin-dashboard/',   views_admin.admin_dashboard,        name='admin_dashboard'),
+    path('admin-dashboard/feedback/<int:feedback_id>/respond/', views_admin.respond_to_feedback, name='respond_to_feedback'),
     path('admin-dashboard/export/pdf/', views_admin.export_admin_dashboard_pdf, name='export_admin_dashboard_pdf'),
 
     # ── Uploads / toggles ────────────────────────────────────────────────────
@@ -39,4 +44,6 @@ urlpatterns = [
 
     # ── Preferences API ───────────────────────────────────────────────────────
     path('api/preferences/', progress_views.preferences, name='preferences'),
+
+   
 ]

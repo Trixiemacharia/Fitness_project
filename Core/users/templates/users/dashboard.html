@@ -1,15 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitTrack</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/categories.css' %}">
     <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/progress.css' %}">
     <link rel="stylesheet" href="{% static 'css/profile.css' %}">
     <link rel="stylesheet" href="{% static 'css/nutrition.css' %}">
@@ -73,59 +74,239 @@
                 </h1>
             </div>
 
-            <!-- Search -->
-            <div class="search-wrap">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input type="text" id="search-workout" placeholder="Search workouts..." autocomplete="off">
-            </div>
+            <!-- ══════════════════════════════════════════
+                 DASHBOARD SHELL — 2 rows of 3 cards each
+            ══════════════════════════════════════════ -->
+            <div class="dashboard-shell">
 
-            <!-- Filters -->
-            <div class="filter-section">
-                <div class="filter-row">
-                    <span class="filter-label">Level</span>
-                    <div class="chip-row">
-                        <button class="chip {% if profile.fitness_level == 'beginner' %}selected{% endif %}" data-level="beginner">Beginner</button>
-                        <button class="chip {% if profile.fitness_level == 'intermediate' %}selected{% endif %}" data-level="intermediate">Intermediate</button>
-                        <button class="chip {% if profile.fitness_level == 'advanced' %}selected{% endif %}" data-level="advanced">Advanced</button>
-                    </div>
-                </div>
-                <div class="filter-row">
-                    <span class="filter-label">Training Type</span>
-                    <div class="chip-row">
-                        <button class="chip selected" data-type="all">All</button>
-                        <button class="chip" data-type="strength">Strength</button>
-                        <button class="chip" data-type="hiit">HIIT</button>
-                        <button class="chip" data-type="cardio">Cardio</button>
-                        <button class="chip" data-type="mobility">Mobility</button>
-                    </div>
-                </div>
-                <div class="filter-row">
-                    <span class="filter-label">Muscle Focus</span>
-                    <div class="chip-row" id="muscle-chip-row"></div>
-                </div>
-            </div>
+                <!-- ── ROW 1: Activity Snapshot | Nutrition | Weekly Trends ── -->
+                <div class="dashboard-row">
 
-            <p class="section-label">Categories</p>
-            <div class="card-container">
-                {% for category in categories %}
-                <div class="category-card {{ category.training_type }}" data-id="{{ category.id }}">
-                    <div class="card-left">
-                        <span class="card-type-tag">{{ category.training_type|upper }}</span>
-                        <h3>{{ category.name }}</h3>
-                        <p class="program-count">Loading...</p>
+                    <!-- LEFT: Activity Snapshot -->
+                    <section class="dashboard-panel glass-panel">
+                        <div class="panel-head">
+                            <div>
+                                <p class="panel-eyebrow">Activity Snapshot</p>
+                                <h3>Today's activity</h3>
+                            </div>
+                        </div>
+                        <div id="todayActivityState" class="activity-empty-state">No activity recorded today</div>
+                        <div id="activitySnapshotGrid" class="activity-snapshot-grid">
+                            <article class="snapshot-tile">
+                                <div class="snapshot-icon calories-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2s4 3.5 4 8.2A4 4 0 1 1 8 11c0-2.3 1-4.1 4-9z"/></svg>
+                                </div>
+                                <div class="snapshot-copy">
+                                    <span class="snapshot-label">Calories Burned</span>
+                                    <span id="activityCalories" class="snapshot-value">0 kcal</span>
+                                </div>
+                            </article>
+                            <article class="snapshot-tile">
+                                <div class="snapshot-icon workouts-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 8h2v8H6zM16 8h2v8h-2zM3 10h3v4H3zM18 10h3v4h-3zM8 11h8v2H8z"/></svg>
+                                </div>
+                                <div class="snapshot-copy">
+                                    <span class="snapshot-label">Workout Status</span>
+                                    <span id="activityWorkout" class="snapshot-value">Rest day</span>
+                                </div>
+                            </article>
+                            <article class="snapshot-tile">
+                                <div class="snapshot-icon steps-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4a2 2 0 1 1 4 0v4H9z"/><path d="M8 9h6l3 4v7h-4v-4l-2-2-2 2v4H5v-7z"/></svg>
+                                </div>
+                                <div class="snapshot-copy">
+                                    <span class="snapshot-label">Steps</span>
+                                    <span id="activitySteps" class="snapshot-value">0</span>
+                                </div>
+                            </article>
+                            <article class="snapshot-tile">
+                                <div class="snapshot-icon water-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3s5 5.2 5 9a5 5 0 1 1-10 0c0-3.8 5-9 5-9z"/></svg>
+                                </div>
+                                <div class="snapshot-copy">
+                                    <span class="snapshot-label">Water Intake</span>
+                                    <span id="activityWater" class="snapshot-value">0 cups</span>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+
+                    <!-- MIDDLE: Nutrition -->
+                    <section class="dashboard-panel glass-panel">
+                        <div class="panel-head">
+                            <div>
+                                <p class="panel-eyebrow">Nutrition</p>
+                                <h3>Meal plan preview</h3>
+                            </div>
+                        </div>
+                        <div id="mealPlanPreviewCard" class="meal-plan-preview empty">
+                            <p>Meal plan preview will appear here when enabled in nutrition.</p>
+                        </div>
+                    </section>
+
+                    <!-- RIGHT: Weekly Trends -->
+                    <section class="dashboard-panel glass-panel">
+                        <div class="panel-head">
+                            <div>
+                                <p class="panel-eyebrow">Weekly Trends</p>
+                                <h3>Weight and calorie balance</h3>
+                            </div>
+                        </div>
+                        <div class="chart-stack">
+                            <div class="chart-panel">
+                                <div class="chart-panel-head">
+                                    <h4>Workout Progress</h4>
+                                    <span class="streak-pill"><span id="dashboardStreakCount">0</span>% complete</span>
+                                </div>
+                                <div class="chart-canvas-wrap">
+                                    <canvas id="dashboardConsistencyChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-panel">
+                                <div class="chart-panel-head">
+                                    <h4>Calories vs Target</h4>
+                                </div>
+                                <div class="chart-canvas-wrap">
+                                    <canvas id="dashboardCalorieBalanceChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                </div><!-- /.dashboard-row (row 1) -->
+
+
+                <!-- ── ROW 2: Progress Goal | Suggested Workouts | Smart Summary ── -->
+                <div class="dashboard-row">
+
+                    <!-- LEFT: Progress Goal -->
+                    <section class="dashboard-panel goal-progress-panel glass-panel">
+                        <div class="panel-head">
+                            <div>
+                                <p class="panel-eyebrow">Progress Goal</p>
+                                <h3>Weekly progress</h3>
+                            </div>
+                            <button class="ghost-action" type="button" onclick="switchScreen('progress-screen')">View progress</button>
+                        </div>
+                        <div id="goalProgressContent" class="goal-progress-content">
+                            <div class="goal-progress-ring-wrap">
+                                <svg class="goal-progress-ring" viewBox="0 0 120 120" aria-hidden="true">
+                                    <circle class="goal-progress-ring-track" cx="60" cy="60" r="48"></circle>
+                                    <circle id="goalProgressCircle" class="goal-progress-ring-value" cx="60" cy="60" r="48"></circle>
+                                </svg>
+                                <div class="goal-progress-center">
+                                    <span id="goalProgressPercent" class="goal-progress-percent">0%</span>
+                                    <span class="goal-progress-copy">weekly goal</span>
+                                </div>
+                            </div>
+                            <div class="goal-progress-stats">
+                                <div class="metric-card emphasis">
+                                    <span class="metric-label">Workouts Completed</span>
+                                    <span class="metric-value"><span id="completedWorkoutsCounter">0</span>/<span id="weeklyGoalCounter">0</span></span>
+                                    <span id="goalProgressSubtext" class="metric-sub">No activity recorded today</span>
+                                </div>
+                                <div class="metric-row">
+                                    <div class="metric-card compact">
+                                        <span class="metric-label">Calories Burned Today</span>
+                                        <span class="metric-value" id="caloriesBurnedMetric">0 kcal</span>
+                                    </div>
+                                    <div class="metric-card compact">
+                                        <span class="metric-label">Calories To Target</span>
+                                        <span class="metric-value" id="caloriesRemainingMetric">0 left</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- MIDDLE: Suggested Workouts -->
+                    <section class="dashboard-panel glass-panel">
+                        <div class="panel-head">
+                            <div>
+                                <p class="panel-eyebrow">Suggested Workouts</p>
+                                <h3>Focused for your goals</h3>
+                            </div>
+                        </div>
+                        <div id="suggestedWorkoutList" class="suggested-workout-list"></div>
+                    </section>
+
+                    <!-- RIGHT: Smart Summary -->
+                    <section class="dashboard-panel glass-panel insights-panel">
+                        <div class="panel-head">
+                            <div>
+                                <p class="panel-eyebrow">Smart Summary</p>
+                                <h3>Reminders and insights</h3>
+                            </div>
+                        </div>
+                        <div id="dashboardReminders" class="reminders-list"></div>
+                        <div id="dashboardInsights" class="insights-list"></div>
+                    </section>
+
+                </div><!-- /.dashboard-row (row 2) -->
+
+
+                <!-- ── FULL WIDTH: Workout Library ── -->
+                <section class="dashboard-panel glass-panel dashboard-library-panel">
+                    <div class="panel-head">
+                        <div>
+                            <p class="panel-eyebrow">Workout Library</p>
+                            <h3>Browse your exercise categories</h3>
+                        </div>
                     </div>
-                    {% if category.image %}
-                    <div class="card-right"><img src="{{ category.image.url }}" alt="{{ category.name }}"></div>
-                    {% endif %}
-                    <span class="card-number">0{{ forloop.counter }}</span>
-                </div>
-                {% empty %}
-                <div class="empty-state"><p class="empty-msg">No categories yet</p></div>
-                {% endfor %}
-            </div>
-        </div>
+
+                    <div class="search-wrap">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="search-workout" placeholder="Search workouts..." autocomplete="off">
+                    </div>
+
+                    <div class="filter-section">
+                        <div class="filter-row">
+                            <span class="filter-label">Level</span>
+                            <div class="chip-row">
+                                <button class="chip {% if profile.fitness_level == 'beginner' %}selected{% endif %}" data-level="beginner">Beginner</button>
+                                <button class="chip {% if profile.fitness_level == 'intermediate' %}selected{% endif %}" data-level="intermediate">Intermediate</button>
+                                <button class="chip {% if profile.fitness_level == 'advanced' %}selected{% endif %}" data-level="advanced">Advanced</button>
+                            </div>
+                        </div>
+                        <div class="filter-row">
+                            <span class="filter-label">Training Type</span>
+                            <div class="chip-row">
+                                <button class="chip selected" data-type="all">All</button>
+                                <button class="chip" data-type="strength">Strength</button>
+                                <button class="chip" data-type="hiit">HIIT</button>
+                                <button class="chip" data-type="cardio">Cardio</button>
+                                <button class="chip" data-type="mobility">Mobility</button>
+                            </div>
+                        </div>
+                        <div class="filter-row">
+                            <span class="filter-label">Muscle Focus</span>
+                            <div class="chip-row" id="muscle-chip-row"></div>
+                        </div>
+                    </div>
+
+                    <div class="card-container">
+                        {% for category in categories %}
+                        <div class="category-card {{ category.training_type }}" data-id="{{ category.id }}">
+                            <div class="card-left">
+                                <span class="card-type-tag">{{ category.training_type|upper }}</span>
+                                <h3>{{ category.name }}</h3>
+                                <p class="program-count">Loading...</p>
+                            </div>
+                            {% if category.image %}
+                            <div class="card-right"><img src="{{ category.image.url }}" alt="{{ category.name }}"></div>
+                            {% endif %}
+                            <span class="card-number">0{{ forloop.counter }}</span>
+                        </div>
+                        {% empty %}
+                        <div class="empty-state"><p class="empty-msg">No categories yet</p></div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+            </div><!-- /.dashboard-shell -->
+        </div><!-- /#dashboard -->
 
         <!-- Exercise list (within dashboard screen) -->
         <div id="exercises-section" style="display:none;">
@@ -183,7 +364,7 @@
                 <span class="progress-section-title">Workout Consistency</span>
             </div>
             <div class="chart-wrap">
-                <div id="heatmap-grid" class="heatmap-grid"></div>
+                <canvas id="consistency-chart"></canvas>
             </div>
         </div>
 
@@ -211,7 +392,7 @@
         <!-- Measurements -->
         <div class="progress-section">
             <div class="progress-section-header">
-                <span class="progress-section-title">Body Measurements</span>
+                <span class="progress-section-title">Body Measurements Snapshot</span>
                 <button class="log-btn" onclick="openLogModal('measurement')">+ Log</button>
             </div>
             <div class="chart-wrap">
@@ -227,11 +408,11 @@
             <div class="comparison-grid">
                 <div class="comparison-card" id="before-photo-card">
                     <div class="comparison-label">Before</div>
-                    <div class="comparison-photo-empty">Add a photo labeled before to compare your transformation.</div>
+                    <div class="comparison-photo-empty">Upload your starting photo.</div>
                 </div>
                 <div class="comparison-card" id="after-photo-card">
                     <div class="comparison-label">After</div>
-                    <div class="comparison-photo-empty">Add a photo labeled after to see your progress side by side.</div>
+                    <div class="comparison-photo-empty">Upload your latest photo.</div>
                 </div>
             </div>
             <div id="photos-grid" class="photos-grid progress-photo-strip">
@@ -335,7 +516,7 @@
                         </div>
                     </div>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="pref-dark-mode" checked>
+                        <input type="checkbox" id="pref-dark-mode">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -611,8 +792,7 @@
         <h2 class="page-title">Get in <span>Touch</span></h2>
 
         <p class="contact-intro">
-            Have a question,suggestion , or need help with the app?
-            Reach out we're happy to help.
+            Have a question, suggestion, or need help with the app? Reach out and we will help.
         </p>
 
         <!-- Developer card -->
@@ -631,7 +811,7 @@
         <div class="about-section">
             <h3 class="about-section-title">Contact</h3>
             <div class="settings-card">
-                <a class="settings-row contact-row" href="freakyfriday383@gmail.com">
+                <a class="settings-row contact-row" href="mailto:freakyfriday383@gmail.com">
                     <div class="settings-row-left">
                         <div class="settings-row-icon">
                             <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -645,22 +825,57 @@
                 </a>
             </div>
         </div>
-        
-    <!-- Help section -->
+
         <div class="about-section">
             <h3 class="about-section-title">Need Help?</h3>
-                <div class="help-card">
-                    <div class="help-label">Feature request?</div>
-                    <div class="help-sub">We'd love to hear your ideas. Reach out via email or GitHub.</div>
-                </div>
-                <div class="help-card">
-                    <div class="help-label">Account issue?</div>
-                    <div class="help-sub">Email us directly and we'll sort it out as quickly as possible.</div>
-                </div>
+            <div class="help-card">
+                <div class="help-label">Feature request?</div>
+                <div class="help-sub">We'd love to hear your ideas. Reach out via email or the feedback form below.</div>
+            </div>
+            <div class="help-card">
+                <div class="help-label">Account issue?</div>
+                <div class="help-sub">Send a quick note and we'll sort it out as quickly as possible.</div>
+            </div>
+        </div>
+
+        <div class="about-section">
+            <h3 class="about-section-title">Feedback</h3>
+            <div class="settings-card feedback-thread-card">
+                <form id="dashboardFeedbackForm" class="feedback-form">
+                    <div class="feedback-form-row">
+                        <select id="feedbackCategory" class="settings-select">
+                            <option value="feature">Feature Request</option>
+                            <option value="bug">Bug Report</option>
+                            <option value="complaint">Complaint</option>
+                        </select>
+                    </div>
+                    <textarea id="feedbackMessage" class="feedback-textarea" placeholder="Ask a question, share feedback, or report an issue." rows="4"></textarea>
+                    <button type="submit" class="settings-save-btn feedback-submit-btn">Send Feedback</button>
+                </form>
+                <div id="feedbackThreadList" class="feedback-thread-list"></div>
             </div>
         </div>
     </div>
 
+</div>
+
+<div id="workoutVideoModal" class="video-modal-overlay" onclick="if(event.target===this)closeWorkoutVideoModal()">
+    <div class="video-modal">
+        <div class="video-modal-header">
+            <div>
+                <p class="video-modal-eyebrow">Workout demo</p>
+                <h3 id="videoModalTitle">Workout video</h3>
+            </div>
+            <button class="modal-close" type="button" onclick="closeWorkoutVideoModal()">×</button>
+        </div>
+        <div class="video-modal-player">
+            <video id="videoModalPlayer" controls playsinline></video>
+        </div>
+        <p id="videoModalDescription" class="video-modal-description"></p>
+        <div class="video-modal-actions">
+            <button id="markWorkoutCompleteBtn" class="primary-cta" type="button">Mark as Complete</button>
+        </div>
+    </div>
 </div>
 
 <!--SCRIPTS-->

@@ -18,7 +18,7 @@ async function loadProfileScreen() {
         if (unitsSelect) unitsSelect.value = prefs.units || 'metric';
 
         const darkToggle = document.getElementById('pref-dark-mode');
-        if (darkToggle) darkToggle.checked = prefs.dark_mode !== false;
+        if (darkToggle) darkToggle.checked = prefs.dark_mode === true;
 
         const notifToggle = document.getElementById('pref-notifications');
         if (notifToggle) notifToggle.checked = prefs.notifications !== false;

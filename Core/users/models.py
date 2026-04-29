@@ -81,7 +81,7 @@ class UserPreferences(models.Model):
     fitness_goal     = models.CharField(max_length=30, choices=GOAL_CHOICES, default='stay_active')
     preferred_days   = models.JSONField(default=list, blank=True)   # e.g. ["mon","wed","fri"]
     units            = models.CharField(max_length=10, choices=UNIT_CHOICES, default='metric')
-    dark_mode        = models.BooleanField(default=True)
+    dark_mode        = models.BooleanField(default=False)
     notifications    = models.BooleanField(default=True)
     updated_at       = models.DateTimeField(auto_now=True)
 
@@ -169,6 +169,32 @@ class ProgressPhoto(models.Model):
     def __str__(self):
         return f"{self.user.username} — {self.label} photo on {self.date}"
     
+class ProgressLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='progress_logs')
+    date = models.DateField()
+    calories_burned = models.PositiveIntegerField(default=0)
+    workout_done = models.BooleanField(default=False)
+    steps = models.PositiveIntegerField(default=0)
+    water_intake = models.PositiveIntegerField(default=0, help_text='Water intake in cups')
+
+    class Meta:
+        ordering = ['-date']
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'date'], name='unique_progress_log_per_user_per_day')
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} progress on {self.date}"
+
+    def is_empty(self):
+        return (
+            self.calories_burned == 0
+            and not self.workout_done
+            and self.steps == 0
+            and self.water_intake == 0
+        )
+
+
 class MealPlan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='meal_plans')
     name = models.CharField(max_length=100)  # e.g "Week 1 - Lose Weight Plan"
@@ -252,6 +278,8 @@ class Feedback(models.Model):
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     message = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    admin_response = models.TextField(blank=True)
+    responded_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

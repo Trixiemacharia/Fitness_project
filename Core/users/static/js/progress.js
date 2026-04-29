@@ -1,6 +1,7 @@
 let weightChart = null;
 let measurementChart = null;
 let weeklyWorkoutsChart = null;
+let consistencyChart = null;
 let progressLoaded = false;
 
 async function loadProgressScreen() {
@@ -30,30 +31,46 @@ async function loadConsistency() {
             weeklyAverage.textContent = data.avg_weekly_workouts || 0;
         }
 
-        const grid = document.getElementById('heatmap-grid');
-        if (grid) {
-            grid.innerHTML = '';
-            const today = new Date().toISOString().split('T')[0];
-
-            data.weeks.forEach((week) => {
-                const col = document.createElement('div');
-                col.className = 'heatmap-week';
-
-                week.forEach((day) => {
-                    const cell = document.createElement('div');
-                    cell.className = `heatmap-day${day.active ? ' active' : ''}${day.date === today ? ' today' : ''}`;
-                    cell.title = `${day.date}${day.count ? ` - ${day.count} workouts` : ''}`;
-                    col.appendChild(cell);
-                });
-
-                grid.appendChild(col);
-            });
-        }
+        renderConsistencyChart(data.weekly_workouts || []);
 
         renderWeeklyWorkoutsChart(data.weekly_workouts || []);
     } catch (e) {
         console.error('Consistency load failed:', e);
     }
+}
+
+function renderConsistencyChart(weeklyData) {
+    const canvas = document.getElementById('consistency-chart');
+    if (!canvas) return;
+
+    clearChartEmpty(canvas);
+    if (consistencyChart) {
+        consistencyChart.destroy();
+        consistencyChart = null;
+    }
+
+    if (!weeklyData.length) {
+        showChartEmpty(canvas, 'No consistency data yet. Complete workouts to reveal your trend.');
+        return;
+    }
+
+    consistencyChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: weeklyData.map((item) => formatChartDate(item.label)),
+            datasets: [{
+                label: 'Consistency',
+                data: weeklyData.map((item) => item.count),
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59,130,246,0.12)',
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4,
+                pointBackgroundColor: '#3b82f6',
+            }]
+        },
+        options: chartOptions('Sessions'),
+    });
 }
 
 function renderWeeklyWorkoutsChart(weeklyData) {
@@ -151,26 +168,35 @@ async function loadMeasurementChart() {
             return;
         }
 
-        const labels = data.map((entry) => formatChartDate(entry.date));
         const unit = data[0]?.unit || 'cm';
         const fields = ['waist', 'hips', 'chest', 'arms', 'thighs'];
-        const colors = ['#c8f135', '#f97316', '#3b82f6', '#a855f7', '#ff3b3b'];
-
-        const datasets = fields.map((field, index) => ({
-            label: field.charAt(0).toUpperCase() + field.slice(1),
-            data: data.map((entry) => entry[field] ? parseFloat(entry[field]) : null),
-            borderColor: colors[index],
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            pointRadius: 3,
-            tension: 0.3,
-            spanGaps: true,
-        }));
-
+        const latest = data[data.length - 1];
         measurementChart = new Chart(canvas, {
-            type: 'line',
-            data: { labels, datasets },
-            options: chartOptions(`Measurements (${unit})`),
+            type: 'radar',
+            data: {
+                labels: fields.map((field) => field.charAt(0).toUpperCase() + field.slice(1)),
+                datasets: [{
+                    label: `Latest (${unit})`,
+                    data: fields.map((field) => latest[field] ? parseFloat(latest[field]) : 0),
+                    borderColor: '#0f766e',
+                    backgroundColor: 'rgba(15,118,110,0.18)',
+                    pointBackgroundColor: '#0f766e',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255,255,255,0.08)' },
+                        grid: { color: 'rgba(255,255,255,0.08)' },
+                        pointLabels: { color: '#a0a0a0', font: { family: 'Barlow', size: 11 } },
+                        ticks: { color: '#a0a0a0', backdropColor: 'transparent' },
+                    },
+                },
+            },
         });
     } catch (e) {
         console.error('Measurement chart failed:', e);
@@ -210,8 +236,8 @@ function renderBeforeAfterComparison(photos) {
     const beforePhoto = photos.find((photo) => photo.label === 'before');
     const afterPhoto = photos.find((photo) => photo.label === 'after');
 
-    fillComparisonCard(beforeCard, 'Before', beforePhoto, 'Add a photo labeled before to compare your transformation.');
-    fillComparisonCard(afterCard, 'After', afterPhoto, 'Add a photo labeled after to see your progress side by side.');
+    fillComparisonCard(beforeCard, 'Before', beforePhoto, 'Upload your starting photo.');
+    fillComparisonCard(afterCard, 'After', afterPhoto, 'Upload your latest photo.');
 }
 
 function fillComparisonCard(card, title, photo, emptyText) {

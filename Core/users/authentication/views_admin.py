@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.db.models import Count
 from django.db.models.functions import TruncDay, TruncMonth, TruncWeek
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from exercises.models import ExerciseLog
@@ -422,11 +422,14 @@ def build_admin_dashboard_context(request):
         'nutrition_report_details_raw': nutrition_report_details,
         'recent_feedback_raw': [
             {
+                'id': item.id,
                 'user': item.user.username,
                 'category': item.get_category_display(),
                 'status': item.get_status_display(),
                 'message': item.message,
+                'admin_response': item.admin_response,
                 'created_at': timezone.localtime(item.created_at).strftime('%Y-%m-%d %H:%M'),
+                'responded_at': timezone.localtime(item.responded_at).strftime('%Y-%m-%d %H:%M') if item.responded_at else '',
             }
             for item in recent_feedback
         ],
@@ -488,6 +491,23 @@ def build_admin_dashboard_context(request):
 def admin_dashboard(request):
     context, _ = build_admin_dashboard_context(request)
     return render(request, 'users/admin_dashboard.html', context)
+
+
+@login_required
+@user_passes_test(is_admin, login_url='dashboard')
+def respond_to_feedback(request, feedback_id):
+    if request.method != 'POST':
+        return redirect('admin_dashboard')
+
+    feedback = get_object_or_404(Feedback, pk=feedback_id)
+    admin_response = (request.POST.get('admin_response') or '').strip()
+    status_value = request.POST.get('status') or feedback.status
+
+    feedback.admin_response = admin_response
+    feedback.status = status_value
+    feedback.responded_at = timezone.now() if admin_response else feedback.responded_at
+    feedback.save(update_fields=['admin_response', 'status', 'responded_at'])
+    return redirect('admin_dashboard')
 
 
 def _add_stat_block(lines, title, items):

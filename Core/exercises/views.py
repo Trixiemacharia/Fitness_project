@@ -3,6 +3,7 @@ from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 
 from rest_framework import viewsets
 from rest_framework.decorators import api_view, permission_classes
@@ -11,7 +12,7 @@ from rest_framework.response import Response
 
 from .models import Category, MuscleGroup, Exercise, ExerciseLog
 from .serializers import CategorySerializer, ExerciseSerializer, MuscleGroupSerializer, ExerciseLogSerializer
-from users.models import UserProfile
+from users.models import ProgressLog, UserProfile
 
 
 # ===== EXISTING VIEWSETS =====
@@ -80,6 +81,7 @@ def update_exercise_log(request):
         exercise=exercise,
         defaults={'sets_completed': sets_completed}
     )
+    sync_progress_log_from_exercise_log(request.user, log)
 
     serializer = ExerciseLogSerializer(log)
     return Response(serializer.data)
@@ -96,10 +98,37 @@ def reset_exercise_log(request, exercise_id):
         log = ExerciseLog.objects.get(user=request.user, exercise_id=exercise_id)
         log.sets_completed = 0
         log.save()
+        sync_progress_log_from_exercise_log(request.user, log)
         serializer = ExerciseLogSerializer(log)
         return Response(serializer.data)
     except ExerciseLog.DoesNotExist:
         return Response({'sets_completed': 0, 'status': 'not_started'})
+
+
+def sync_progress_log_from_exercise_log(user, exercise_log):
+    today = timezone.localdate()
+    completed_today = ExerciseLog.objects.filter(
+        user=user,
+        updated_at__date=today,
+        sets_completed__gt=0,
+    )
+
+    calories_burned = sum(log.sets_completed * 35 for log in completed_today)
+    workout_done = completed_today.filter(sets_completed__gt=0).exists()
+    steps = 4500 + (completed_today.count() * 1200) if workout_done else 0
+
+    if not workout_done and calories_burned == 0 and steps == 0:
+        ProgressLog.objects.filter(user=user, date=today).delete()
+        return
+
+    progress_log, _ = ProgressLog.objects.get_or_create(user=user, date=today)
+    progress_log.calories_burned = calories_burned
+    progress_log.workout_done = workout_done
+    progress_log.steps = steps
+    if progress_log.is_empty():
+        progress_log.delete()
+        return
+    progress_log.save()
 
 
 # ===== SEARCH =====

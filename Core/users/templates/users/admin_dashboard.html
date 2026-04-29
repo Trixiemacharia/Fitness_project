@@ -323,14 +323,48 @@
     </div>
 
     <div class="chart-card feedback-card">
-      <div class="feedback-title">Feedback Module</div>
+      <div class="feedback-title">Recent Feedback</div>
       <div class="feedback-copy">
-        Add a <code>Feedback</code>
+        User questions and complaints submitted from the dashboard appear here. Admin replies are shown back to the user beside their message.
       </div>
       <div class="insight-row centered">
         <div class="insight-pill"><div class="pill-dot danger"></div>Bug Reports</div>
         <div class="insight-pill"><div class="pill-dot violet"></div>Feature Requests</div>
         <div class="insight-pill"><div class="pill-dot orange"></div>Complaints</div>
+      </div>
+      <div class="feedback-list">
+        {% for item in recent_feedback %}
+        <div class="feedback-item">
+          <div class="feedback-item-meta">
+            <span class="feedback-user">{{ item.user.username }}</span>
+            <span class="feedback-badge category-{{ item.category }}">{{ item.get_category_display }}</span>
+            <span class="feedback-badge status-{{ item.status }}">{{ item.get_status_display }}</span>
+            <span class="feedback-date">{{ item.created_at|date:"Y-m-d H:i" }}</span>
+          </div>
+          <div class="feedback-message">{{ item.message }}</div>
+          {% if item.admin_response %}
+          <div class="feedback-message" style="margin-top:10px;background:rgba(200,241,53,0.08);">
+            <strong>Admin reply:</strong> {{ item.admin_response }}
+          </div>
+          {% endif %}
+          <form method="post" action="{% url 'respond_to_feedback' item.id %}" style="margin-top:12px;display:grid;gap:10px;">
+            {% csrf_token %}
+            <textarea name="admin_response" rows="3" style="width:100%;border-radius:14px;border:1px solid var(--border);padding:12px;background:var(--panel);color:var(--text);">{{ item.admin_response }}</textarea>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+              <select name="status" style="border-radius:999px;border:1px solid var(--border);padding:10px 14px;background:var(--panel);color:var(--text);">
+                <option value="new" {% if item.status == 'new' %}selected{% endif %}>New</option>
+                <option value="in_review" {% if item.status == 'in_review' %}selected{% endif %}>In Review</option>
+                <option value="resolved" {% if item.status == 'resolved' %}selected{% endif %}>Resolved</option>
+              </select>
+              <button type="submit" class="export-btn" style="text-decoration:none;">Save Response</button>
+            </div>
+          </form>
+        </div>
+        {% empty %}
+        <div class="feedback-item">
+          <div class="feedback-message">No feedback has been submitted yet.</div>
+        </div>
+        {% endfor %}
       </div>
     </div>
   </section>
