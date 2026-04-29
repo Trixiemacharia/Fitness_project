@@ -561,23 +561,70 @@ body {
 .insights-list,
 .reminders-list {
     display: grid;
-    gap: 12px;
+    gap: 10px;
 }
 
-.reminder-item,
-.insight-item {
-    border-radius: 10px;
-    padding: 14px 16px;
+/* Base card — flex row: icon | text | dismiss */
+.insight-item,
+.reminder-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
     background: #f8fafc;
     border: 1px solid rgba(120, 144, 173, 0.15);
     border-left: 3px solid #1D9E75;
+    border-radius: 0 10px 10px 0;
     line-height: 1.55;
     color: #17314f;
-    border-radius: 0 10px 10px 0;
+    font-size: 13px;
 }
 
 .reminder-item {
     border-left-color: #BA7517;
+}
+
+/* Emoji icon column */
+.insight-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    line-height: 1.4;
+}
+
+/* Text fills remaining space */
+.insight-text,
+.reminder-text {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.55;
+}
+
+/* Dismiss button — small × */
+.dismiss-insight-btn,
+.dismiss-reminder-btn {
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid rgba(120, 144, 173, 0.22);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #8a9ab0;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+    margin-top: 1px;
+}
+
+.dismiss-insight-btn:hover,
+.dismiss-reminder-btn:hover {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.3);
+    color: #dc2626;
 }
 
 /* ── Video modal ── */

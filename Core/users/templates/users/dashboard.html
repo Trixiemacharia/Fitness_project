@@ -144,11 +144,11 @@
                         </div>
                     </section>
 
-                    <!-- RIGHT: Weekly Trends -->
+                    <!-- RIGHT: Daily Trends -->
                     <section class="dashboard-panel glass-panel">
                         <div class="panel-head">
                             <div>
-                                <p class="panel-eyebrow">Weekly Trends</p>
+                                <p class="panel-eyebrow">Daily Trends</p>
                                 <h3>Weight and calorie balance</h3>
                             </div>
                         </div>
@@ -183,8 +183,8 @@
                     <section class="dashboard-panel goal-progress-panel glass-panel">
                         <div class="panel-head">
                             <div>
-                                <p class="panel-eyebrow">Progress Goal</p>
-                                <h3>Weekly progress</h3>
+                                <p class="panel-eyebrow" id="goalPanelEyebrow">Daily Goal</p>
+                                <h3 id="goalPanelTitle">Today's Progress</h3>
                             </div>
                             <button class="ghost-action" type="button" onclick="switchScreen('progress-screen')">View progress</button>
                         </div>
@@ -196,13 +196,13 @@
                                 </svg>
                                 <div class="goal-progress-center">
                                     <span id="goalProgressPercent" class="goal-progress-percent">0%</span>
-                                    <span class="goal-progress-copy">weekly goal</span>
+                                    <span class="goal-progress-copy">daily goal</span>
                                 </div>
                             </div>
                             <div class="goal-progress-stats">
                                 <div class="metric-card emphasis">
-                                    <span class="metric-label">Workouts Completed</span>
-                                    <span class="metric-value"><span id="completedWorkoutsCounter">0</span>/<span id="weeklyGoalCounter">0</span></span>
+                                    <span class="metric-label" id="goalMetricLabel">Today's Workout</span>
+                                    <span class="metric-value"><span id="completedWorkoutsCounter">0</span>/<span id="weeklyGoalCounter">1</span></span>
                                     <span id="goalProgressSubtext" class="metric-sub">No activity recorded today</span>
                                 </div>
                                 <div class="metric-row">

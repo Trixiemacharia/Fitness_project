@@ -14,6 +14,7 @@ let dashboardState = {
     reminders: [],
     workoutVideos: [],
     suggestedWorkouts: [],
+    summaryData: null,   // store full summary for insight re-generation
 };
 
 let activeLevel = document.body.getAttribute("data-fitness-level") || "beginner";
@@ -26,6 +27,10 @@ const detailSection = document.getElementById("exercise-detail-section");
 const exercisesList = document.getElementById("exercises-list");
 const categoryTitle = document.getElementById("category-title");
 const cardContainer = document.querySelector(".card-container");
+
+// ─── Dismissed insights storage key ───────────────────────────────────────────
+const DISMISSED_INSIGHTS_KEY = "dashboard_dismissed_insights";
+const DISMISSED_REMINDERS_KEY = "dashboardDismissedReminders";
 
 document.addEventListener("DOMContentLoaded", async () => {
     await Promise.all([loadCategories(), loadLogs()]);
@@ -47,16 +52,17 @@ async function loadHomeDashboard(force = false) {
             reminders: summary.reminders || [],
             workoutVideos: summary.workout_videos || [],
             suggestedWorkouts: summary.suggested_workouts || [],
+            summaryData: summary,
         };
 
         renderActivitySnapshot(summary.today_activity);
-        renderGoalProgress(summary.goal_progress, summary.weekly_stats);
+        renderDailyGoalProgress(summary.goal_progress, summary.today_activity);
         renderMealPlanPreview(summary.meal_plan_enabled, summary.meal_plan_preview);
         renderWeeklyCharts(summary.weekly_stats);
         renderWorkoutVideoGrid(summary.workout_videos || []);
         renderSuggestedWorkoutList(summary.suggested_workouts || []);
         renderReminders(summary.reminders || []);
-        renderInsights(summary.insights || []);
+        renderInsights(buildDynamicInsights(summary));
         await loadFeedbackThread();
 
         homeDashboardLoaded = true;
@@ -70,6 +76,29 @@ function initDashboardEventHandlers() {
     document.getElementById("dashboardFeedbackForm")?.addEventListener("submit", submitFeedbackEntry);
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// ACTIVITY SNAPSHOT — dynamic workout status based on day of week + water sync
+// ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Returns the dynamic workout status label.
+ * Mon–Fri = active training days, Sat–Sun = rest days.
+ * If a workout was actually logged today, that takes priority.
+ */
+function getDynamicWorkoutStatus(activity) {
+    // If backend says a workout was logged today, always show that
+    if (activity?.workout_done) return "Workout logged ✓";
+
+    const dayOfWeek = new Date().getDay(); // 0 = Sun, 6 = Sat
+    const isRestDay = dayOfWeek === 0 || dayOfWeek === 6;
+
+    if (isRestDay) return "Rest day 🛌";
+
+    // Weekday but no workout logged yet
+    if (activity?.has_record) return "No workout yet";
+    return "Training day — start a workout!";
+}
+
 function renderActivitySnapshot(activity) {
     const stateNode = document.getElementById("todayActivityState");
     const caloriesNode = document.getElementById("activityCalories");
@@ -77,15 +106,19 @@ function renderActivitySnapshot(activity) {
     const stepsNode = document.getElementById("activitySteps");
     const waterNode = document.getElementById("activityWater");
 
+    // ── Dynamic workout status (day-of-week aware) ──
+    const workoutStatus = getDynamicWorkoutStatus(activity);
+
     if (!activity?.has_record) {
         if (stateNode) {
             stateNode.textContent = activity?.message || "No activity recorded today";
             stateNode.classList.remove("is-active");
         }
         if (caloriesNode) caloriesNode.textContent = "0 kcal";
-        if (workoutNode) workoutNode.textContent = "Rest day";
+        if (workoutNode) workoutNode.textContent = workoutStatus;
         if (stepsNode) stepsNode.textContent = "0";
-        if (waterNode) waterNode.textContent = "0 cups";
+        // ── Water: pull from nutrition module's live count ──
+        if (waterNode) waterNode.textContent = getLiveWaterCount() + " cups";
         return;
     }
 
@@ -94,15 +127,46 @@ function renderActivitySnapshot(activity) {
         stateNode.classList.add("is-active");
     }
     if (caloriesNode) caloriesNode.textContent = `${activity.calories_burned || 0} kcal`;
-    if (workoutNode) workoutNode.textContent = activity.workout_done ? "Workout logged" : "No workout yet";
+    if (workoutNode) workoutNode.textContent = workoutStatus;
     if (stepsNode) stepsNode.textContent = formatNumber(activity.steps || 0);
-    if (waterNode) waterNode.textContent = `${activity.water_intake || 0} cups`;
+    // ── Water: prefer backend value, fall back to nutrition module count ──
+    if (waterNode) {
+        const backendWater = activity.water_intake || 0;
+        const liveWater = getLiveWaterCount();
+        waterNode.textContent = `${Math.max(backendWater, liveWater)} cups`;
+    }
 }
 
-function renderGoalProgress(goalProgress, weeklyStats) {
-    const progressPercent = Number(weeklyStats?.progress_percent || 0);
-    const completedWorkouts = Number(weeklyStats?.completed_workouts || 0);
-    const weeklyGoal = Number(weeklyStats?.weekly_goal || 0);
+/**
+ * Reads the current waterCount from the Nutrition module (nutrition.js).
+ * Falls back to 0 if the module hasn't initialised yet or the user
+ * hasn't opened the nutrition screen.
+ */
+function getLiveWaterCount() {
+    // nutrition.js exposes waterCount via Nutrition.getWaterCount()
+    // (we add that getter below in the updated nutrition.js section)
+    if (typeof Nutrition !== "undefined" && typeof Nutrition.getWaterCount === "function") {
+        return Nutrition.getWaterCount();
+    }
+    return 0;
+}
+
+/**
+ * Called by nutrition.js every time the water count changes.
+ * Re-renders only the water tile on the dashboard without a full reload.
+ */
+function syncWaterToDashboard(cups) {
+    const waterNode = document.getElementById("activityWater");
+    if (waterNode) waterNode.textContent = `${cups} cups`;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DAILY GOAL PROGRESS  (replaces weekly in the dashboard panel)
+// Shows: today's calorie burn vs daily target, today's workout status,
+// and a simple day-of-week indicator of whether this is a training day.
+// ══════════════════════════════════════════════════════════════════════════════
+
+function renderDailyGoalProgress(goalProgress, todayActivity) {
     const circle = document.getElementById("goalProgressCircle");
     const percentNode = document.getElementById("goalProgressPercent");
     const completedNode = document.getElementById("completedWorkoutsCounter");
@@ -111,32 +175,282 @@ function renderGoalProgress(goalProgress, weeklyStats) {
     const caloriesBurnedNode = document.getElementById("caloriesBurnedMetric");
     const caloriesRemainingNode = document.getElementById("caloriesRemainingMetric");
 
-    if (percentNode) percentNode.textContent = `${progressPercent}%`;
-    if (completedNode) animateCounter(completedNode, completedWorkouts);
-    if (weeklyGoalNode) weeklyGoalNode.textContent = weeklyGoal;
+    // ── Daily calorie target (from goal_progress or fallback) ──
+    const dailyTarget = goalProgress?.daily_calorie_target
+        || (goalProgress?.calories_remaining != null && goalProgress?.calories_burned != null
+            ? goalProgress.calories_burned + goalProgress.calories_remaining
+            : 500);
+
+    const caloriesBurned = Number(goalProgress?.calories_burned || todayActivity?.calories_burned || 0);
+    const caloriesRemaining = Math.max(0, dailyTarget - caloriesBurned);
+
+    // Percent of daily calorie goal achieved (capped at 100)
+    const dailyPercent = Math.min(100, Math.round((caloriesBurned / dailyTarget) * 100));
+
+    // ── Whether today is a scheduled training day ──
+    const dayOfWeek = new Date().getDay();
+    const isRestDay = dayOfWeek === 0 || dayOfWeek === 6;
+    const workoutDone = todayActivity?.workout_done || false;
+
+    // Label for "workouts" counter repurposed as today's workout status
+    const todayLabel = isRestDay ? "Rest Day" : (workoutDone ? "Done ✓" : "Pending");
+    const todayGoal = isRestDay ? "—" : "1";
+
+    if (percentNode) percentNode.textContent = `${dailyPercent}%`;
+
+    // Repurpose counter as "Today's workout: Done / Pending"
+    if (completedNode) completedNode.textContent = workoutDone ? "1" : "0";
+    if (weeklyGoalNode) weeklyGoalNode.textContent = isRestDay ? "—" : "1";
+
     if (subtextNode) {
-        subtextNode.textContent = goalProgress
-            ? `${completedWorkouts} of ${weeklyGoal} workouts completed this week`
-            : "No activity recorded today";
-    }
-    if (caloriesBurnedNode) {
-        caloriesBurnedNode.textContent = `${goalProgress?.calories_burned || 0} kcal`;
-    }
-    if (caloriesRemainingNode) {
-        caloriesRemainingNode.textContent = `${goalProgress?.calories_remaining || weeklyStats?.weekly_calorie_target || 0} left`;
+        if (isRestDay) {
+            subtextNode.textContent = "Rest day — recovery is part of the plan.";
+        } else if (workoutDone) {
+            subtextNode.textContent = "Today's workout complete! Great work.";
+        } else {
+            subtextNode.textContent = `${caloriesBurned} kcal burned so far today`;
+        }
     }
 
+    if (caloriesBurnedNode) caloriesBurnedNode.textContent = `${caloriesBurned} kcal`;
+    if (caloriesRemainingNode) caloriesRemainingNode.textContent = `${caloriesRemaining} left`;
+
+    // ── Ring animation ──
     if (!circle) return;
     const radius = 48;
     const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (progressPercent / 100) * circumference;
     circle.style.strokeDasharray = `${circumference}`;
     circle.style.strokeDashoffset = `${circumference}`;
-    circle.style.stroke = getProgressColor(progressPercent);
+    circle.style.stroke = getProgressColor(dailyPercent);
     requestAnimationFrame(() => {
-        circle.style.strokeDashoffset = `${offset}`;
+        circle.style.strokeDashoffset = `${circumference - (dailyPercent / 100) * circumference}`;
     });
+
+    // ── Update the panel eyebrow/header to say "Daily" not "Weekly" ──
+    const eyebrow = document.querySelector("#goalProgressContent")
+        ?.closest(".dashboard-panel")
+        ?.querySelector(".panel-eyebrow");
+    if (eyebrow) eyebrow.textContent = "Daily Goal";
+
+    const panelTitle = document.querySelector("#goalProgressContent")
+        ?.closest(".dashboard-panel")
+        ?.querySelector("h3");
+    if (panelTitle) panelTitle.textContent = "Today's progress";
+
+    // Update the "Workouts Completed" label to "Today's Workout"
+    const metricLabel = document.querySelector("#completedWorkoutsCounter")
+        ?.closest(".metric-card")
+        ?.querySelector(".metric-label");
+    if (metricLabel) metricLabel.textContent = "Today's Workout";
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SMART SUMMARY — data-driven insights built from real user data
+// Each insight is dismissible and stays dismissed (localStorage).
+// ══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Generates a list of insight objects from the full summary payload.
+ * Each insight: { id: string, text: string }
+ * IDs are stable so dismiss state persists across page loads.
+ */
+function buildDynamicInsights(summary) {
+    const insights = [];
+    const weekly = summary?.weekly_stats || {};
+    const today = summary?.today_activity || {};
+    const goal = summary?.goal_progress || {};
+    const dayOfWeek = new Date().getDay(); // 0=Sun,6=Sat
+
+    // ── Streak insight ──
+    const streak = weekly?.current_streak || 0;
+    if (streak >= 3) {
+        insights.push({
+            id: `streak_${streak}`,
+            icon: "🔥",
+            text: `You're on a ${streak}-day streak — keep it going!`,
+        });
+    } else if (streak === 0) {
+        insights.push({
+            id: "streak_zero",
+            icon: "💪",
+            text: "Start a workout today to kick off your streak.",
+        });
+    }
+
+    // ── Calorie insight ──
+    const burned = today?.calories_burned || 0;
+    const dailyTarget = goal?.daily_calorie_target || 500;
+    const pct = dailyTarget > 0 ? Math.round((burned / dailyTarget) * 100) : 0;
+    if (burned > 0 && pct >= 80) {
+        insights.push({
+            id: `cal_great_${new Date().toDateString()}`,
+            icon: "🎯",
+            text: `You've hit ${pct}% of your daily calorie goal. Excellent effort!`,
+        });
+    } else if (burned === 0 && dayOfWeek !== 0 && dayOfWeek !== 6) {
+        insights.push({
+            id: `cal_zero_${new Date().toDateString()}`,
+            icon: "⚡",
+            text: "No calories burned yet today — even a short walk counts.",
+        });
+    }
+
+    // ── Water intake insight ──
+    const waterCups = getLiveWaterCount() || today?.water_intake || 0;
+    if (waterCups === 0) {
+        insights.push({
+            id: `water_zero_${new Date().toDateString()}`,
+            icon: "💧",
+            text: "Remember to stay hydrated — log your first cup of water.",
+        });
+    } else if (waterCups >= 6) {
+        insights.push({
+            id: `water_great_${new Date().toDateString()}`,
+            icon: "💧",
+            text: `Great hydration! You've had ${waterCups} cups today.`,
+        });
+    } else {
+        insights.push({
+            id: `water_mid_${new Date().toDateString()}`,
+            icon: "💧",
+            text: `${waterCups} cups logged — aim for 8 to stay fully hydrated.`,
+        });
+    }
+
+    // ── Workout consistency insight ──
+    const completedThisWeek = weekly?.completed_workouts || 0;
+    const weeklyGoal = weekly?.weekly_goal || 5;
+    if (completedThisWeek >= weeklyGoal) {
+        insights.push({
+            id: `weekly_complete_${new Date().toDateString()}`,
+            icon: "🏆",
+            text: `Weekly goal achieved — ${completedThisWeek}/${weeklyGoal} workouts done!`,
+        });
+    } else if (completedThisWeek > 0) {
+        const remaining = weeklyGoal - completedThisWeek;
+        insights.push({
+            id: `weekly_progress_${completedThisWeek}`,
+            icon: "📈",
+            text: `${completedThisWeek} of ${weeklyGoal} workouts done this week — ${remaining} to go.`,
+        });
+    }
+
+    // ── Rest day insight ──
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+        insights.push({
+            id: `rest_day_${new Date().toDateString()}`,
+            icon: "🛌",
+            text: "It's your rest day — focus on recovery, stretching, and hydration.",
+        });
+    }
+
+    // ── Meal plan insight ──
+    if (summary?.meal_plan_enabled && !summary?.meal_plan_preview) {
+        insights.push({
+            id: "meal_plan_missing",
+            icon: "🥗",
+            text: "Your meal plan is enabled but has no meals for today — check your nutrition tab.",
+        });
+    }
+
+    if (!summary?.meal_plan_enabled) {
+        insights.push({
+            id: "meal_plan_off",
+            icon: "🥗",
+            text: "Enable your meal plan in the Nutrition tab to get personalised meal suggestions.",
+        });
+    }
+
+    return insights;
+}
+
+function renderInsights(insights) {
+    const container = document.getElementById("dashboardInsights");
+    if (!container) return;
+
+    const dismissed = getDismissedInsights();
+    const visible = insights.filter((item) => !dismissed.includes(item.id));
+
+    if (!visible.length) {
+        container.innerHTML = `<div class="insight-item">
+            <span class="insight-icon">✅</span>
+            <span>You're all caught up — no new insights right now.</span>
+        </div>`;
+        return;
+    }
+
+    container.innerHTML = visible.map((item) => `
+        <div class="insight-item" data-insight-id="${item.id}">
+            <span class="insight-icon">${item.icon || "💡"}</span>
+            <span class="insight-text">${item.text}</span>
+            <button
+                class="dismiss-insight-btn"
+                type="button"
+                aria-label="Dismiss insight"
+                onclick="dismissInsight('${item.id}')"
+            >✕</button>
+        </div>
+    `).join("");
+}
+
+function dismissInsight(insightId) {
+    const dismissed = getDismissedInsights();
+    if (!dismissed.includes(insightId)) {
+        dismissed.push(insightId);
+        localStorage.setItem(DISMISSED_INSIGHTS_KEY, JSON.stringify(dismissed));
+    }
+    // Re-render from cached summary — no extra network call
+    if (dashboardState.summaryData) {
+        renderInsights(buildDynamicInsights(dashboardState.summaryData));
+    }
+}
+
+function getDismissedInsights() {
+    try {
+        return JSON.parse(localStorage.getItem(DISMISSED_INSIGHTS_KEY) || "[]");
+    } catch {
+        return [];
+    }
+}
+
+// ── Reminders remain dismissible as before ──
+function renderReminders(reminders) {
+    const container = document.getElementById("dashboardReminders");
+    if (!container) return;
+
+    const dismissed = getDismissedReminders();
+    const visible = reminders.filter((reminder) => !dismissed.includes(String(reminder.id)));
+    container.innerHTML = visible.length
+        ? visible.map((reminder) => `
+            <div class="reminder-item" data-reminder-id="${reminder.id}">
+                <span class="reminder-text">${reminder.text}</span>
+                <button class="dismiss-reminder-btn" type="button"
+                    onclick="dismissDashboardReminder('${reminder.id}')">Dismiss</button>
+            </div>
+        `).join("")
+        : `<div class="reminder-item">No reminders right now.</div>`;
+}
+
+function dismissDashboardReminder(reminderId) {
+    const dismissed = getDismissedReminders();
+    if (!dismissed.includes(String(reminderId))) {
+        dismissed.push(String(reminderId));
+        localStorage.setItem(DISMISSED_REMINDERS_KEY, JSON.stringify(dismissed));
+    }
+    renderReminders(dashboardState.reminders || []);
+}
+
+function getDismissedReminders() {
+    try {
+        return JSON.parse(localStorage.getItem(DISMISSED_REMINDERS_KEY) || "[]");
+    } catch {
+        return [];
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MEAL PLAN PREVIEW
+// ══════════════════════════════════════════════════════════════════════════════
 
 function renderMealPlanPreview(enabled, preview) {
     const toggle = document.getElementById("dashboardMealPlanToggle");
@@ -181,6 +495,10 @@ function renderMealPlanPreview(enabled, preview) {
         `).join("")}
     `;
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WEEKLY CHARTS (unchanged — Weekly Trends panel still uses weekly data)
+// ══════════════════════════════════════════════════════════════════════════════
 
 function renderWeeklyCharts(weeklyStats) {
     const labels = (weeklyStats?.activity_series || []).map((item) => item.label);
@@ -272,6 +590,10 @@ function destroyChart(canvasId) {
         delete homeDashboardCharts[canvasId];
     }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WORKOUT VIDEOS & SUGGESTED WORKOUTS
+// ══════════════════════════════════════════════════════════════════════════════
 
 function renderWorkoutVideoGrid(videos) {
     const grid = document.getElementById("workoutVideoGrid");
@@ -396,36 +718,9 @@ async function markWorkoutVideoComplete() {
     }
 }
 
-function renderReminders(reminders) {
-    const container = document.getElementById("dashboardReminders");
-    if (!container) return;
-
-    const dismissed = JSON.parse(localStorage.getItem("dashboardDismissedReminders") || "[]");
-    const visible = reminders.filter((reminder) => !dismissed.includes(reminder.id));
-    container.innerHTML = visible.length
-        ? visible.map((reminder) => `
-            <div class="reminder-item" data-reminder-id="${reminder.id}">
-                <div>${reminder.text}</div>
-                <button class="dismiss-reminder-btn" type="button" onclick="dismissDashboardReminder('${reminder.id}')">Dismiss</button>
-            </div>
-        `).join("")
-        : `<div class="reminder-item">No reminders right now.</div>`;
-}
-
-function dismissDashboardReminder(reminderId) {
-    const dismissed = JSON.parse(localStorage.getItem("dashboardDismissedReminders") || "[]");
-    if (!dismissed.includes(reminderId)) {
-        dismissed.push(reminderId);
-        localStorage.setItem("dashboardDismissedReminders", JSON.stringify(dismissed));
-    }
-    renderReminders(dashboardState.reminders || []);
-}
-
-function renderInsights(insights) {
-    const container = document.getElementById("dashboardInsights");
-    if (!container) return;
-    container.innerHTML = insights.map((insight) => `<div class="insight-item">${insight}</div>`).join("");
-}
+// ══════════════════════════════════════════════════════════════════════════════
+// FEEDBACK
+// ══════════════════════════════════════════════════════════════════════════════
 
 async function loadFeedbackThread() {
     const container = document.getElementById("feedbackThreadList");
@@ -489,6 +784,10 @@ async function submitFeedbackEntry(event) {
         console.error("Failed to submit feedback:", error);
     }
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CATEGORIES / EXERCISES — unchanged
+// ══════════════════════════════════════════════════════════════════════════════
 
 async function loadCategories() {
     try {
@@ -853,6 +1152,7 @@ function closeDetail() {
     exercisesSection.style.display = "block";
 }
 
+// ── Search ──
 const searchInput = document.getElementById("search-workout");
 let debounceTimer;
 searchInput?.addEventListener("input", () => {
@@ -881,6 +1181,7 @@ searchInput?.addEventListener("input", () => {
     }, 300);
 });
 
+// ── Profile panel ──
 const avatarBtn = document.getElementById("avatarBtn");
 const profilePanel = document.getElementById("profilePanel");
 avatarBtn?.addEventListener("click", (event) => {
@@ -930,6 +1231,10 @@ document.getElementById("deleteBtn")?.addEventListener("click", () => {
     fetch("/profile/delete/", { method: "POST", headers: { "X-CSRFToken": getCookie("csrftoken") } })
         .then(() => { window.location.href = "/"; });
 });
+
+// ══════════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════════════════════════
 
 function getCookie(name) {
     let value = null;
