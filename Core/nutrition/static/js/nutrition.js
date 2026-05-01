@@ -17,6 +17,7 @@ const Nutrition = (() => {
     const el = id => document.getElementById(id);
 
     // ─── CSRF helper ──────────────────────────────
+    // Reads csrftoken from cookie — required for Django POST/DELETE
     function csrf() {
         const m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
         return m ? m[1] : '';
@@ -24,6 +25,7 @@ const Nutrition = (() => {
 
     // ─── Date helpers ─────────────────────────────
     function todayStr() {
+        // Returns YYYY-MM-DD in local time (not UTC)
         const d = new Date();
         const y = d.getFullYear();
         const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -33,8 +35,10 @@ const Nutrition = (() => {
 
     function setDate(dateStr) {
         currentDate = dateStr;
+        // Sync all date inputs
         if (el('nutr-date-picker'))  el('nutr-date-picker').value  = dateStr;
         if (el('nutr-entry-date'))   el('nutr-entry-date').value   = dateStr;
+        // Update the label text
         const lbl = el('nutr-date-label');
         if (!lbl) return;
         if (dateStr === todayStr()) {
@@ -62,30 +66,42 @@ const Nutrition = (() => {
     }
 
     function init() {
-        setDate(currentDate);
-        buildGlasses();
+        setDate(currentDate);           // sync label + inputs
+        buildGlasses();                 // render water glasses
 
         if (!bound) {
             bindAll();
             bound = true;
         }
 
-        refreshAll();
+        refreshAll();                   // load data from API
     }
 
     // ─── Bind all events ONCE ────────────────────
     function bindAll() {
+
+        // ← prev day
         el('nutr-prev-day')?.addEventListener('click', () => shiftDate(-1));
+        // → next day
         el('nutr-next-day')?.addEventListener('click', () => shiftDate(+1));
 
+        // Calendar picker (hidden date input behind the label)
         el('nutr-date-picker')?.addEventListener('change', e => {
-            if (e.target.value) { setDate(e.target.value); refreshAll(); }
+            if (e.target.value) {
+                setDate(e.target.value);
+                refreshAll();
+            }
         });
 
+        // Entry date field (inside the form) — also navigates view
         el('nutr-entry-date')?.addEventListener('change', e => {
-            if (e.target.value) { setDate(e.target.value); refreshAll(); }
+            if (e.target.value) {
+                setDate(e.target.value);
+                refreshAll();
+            }
         });
 
+        // Food search input (debounced)
         el('nutr-food-input')?.addEventListener('input', () => {
             clearTimeout(searchTimer);
             const q = el('nutr-food-input').value.trim();
@@ -94,6 +110,7 @@ const Nutrition = (() => {
             searchTimer = setTimeout(() => searchFood(q), 320);
         });
 
+        // Hide dropdown on outside click
         document.addEventListener('click', e => {
             if (!e.target.closest('#nutr-food-input') &&
                 !e.target.closest('#nutr-dropdown')) {
@@ -101,8 +118,10 @@ const Nutrition = (() => {
             }
         });
 
+        // Clear selected food
         el('nutr-chip-clear')?.addEventListener('click', clearFood);
 
+        // Meal type selector
         document.querySelectorAll('.nutr-mt').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.nutr-mt').forEach(b => b.classList.remove('active'));
@@ -111,11 +130,16 @@ const Nutrition = (() => {
             });
         });
 
+        // Portion input → re-validate
         el('nutr-portion')?.addEventListener('input', validateForm);
+
+        // Log meal button
         el('nutr-submit')?.addEventListener('click', logMeal);
     }
 
+    // ─── Refresh all data ─────────────────────────
     function refreshAll() {
+        fetchWater();
         fetchSummary();
         fetchLogs();
         fetchWeekly();
@@ -125,7 +149,7 @@ const Nutrition = (() => {
     function searchFood(q) {
         fetch(`/api/nutrition/foods/?q=${encodeURIComponent(q)}`, {
             method: 'GET',
-            credentials: 'same-origin',
+            credentials: 'same-origin',           // sends session cookie
             headers: { 'X-CSRFToken': csrf() }
         })
         .then(r => {
@@ -159,7 +183,9 @@ const Nutrition = (() => {
                 </div>`).join('');
 
             box.querySelectorAll('.nutr-dd-item').forEach(row => {
-                row.addEventListener('click', () => pickFood(items[+row.dataset.i]));
+                row.addEventListener('click', () => {
+                    pickFood(items[+row.dataset.i]);
+                });
             });
         }
         box.style.display = 'block';
@@ -180,6 +206,8 @@ const Nutrition = (() => {
         closeDropdown();
 
         if (el('nutr-food-input')) el('nutr-food-input').value = food.name;
+
+        // Populate chip
         if (el('nutr-chip-name')) el('nutr-chip-name').textContent = food.name;
         if (el('nc-cal'))  el('nc-cal').textContent  = `${food.calories_per_100g} kcal`;
         if (el('nc-prot')) el('nc-prot').textContent = `${food.protein_per_100g}g P`;
@@ -208,7 +236,7 @@ const Nutrition = (() => {
         if (btn) btn.disabled = !ok;
     }
 
-    // ─── LOG MEAL ─────────────────────────────────
+    //LOG MEAL
     function logMeal() {
         if (!selectedFood) return;
 
@@ -229,15 +257,16 @@ const Nutrition = (() => {
 
         fetch('/api/nutrition/logs/', {
             method: 'POST',
-            credentials: 'same-origin',
+            credentials: 'same-origin',           // ← sends Django session cookie
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrf()
+                'X-CSRFToken': csrf()              // ← required by Django CSRF middleware
             },
             body
         })
         .then(r => {
             if (!r.ok) {
+                // Surface the error details for debugging
                 return r.json().then(detail => {
                     console.error('Server rejected log:', detail);
                     throw new Error(JSON.stringify(detail));
@@ -245,11 +274,16 @@ const Nutrition = (() => {
             }
             return r.json();
         })
-        .then(() => {
+        .then(saved => {
+            // ✅ Successfully saved — update UI
             toast('Meal logged successfully!!', false);
+
+            // Reset form
             clearFood();
             if (el('nutr-portion')) el('nutr-portion').value = '';
             if (btn) { btn.disabled = true; btn.textContent = '+ Log Meal'; }
+
+            // Pull fresh data from DB
             fetchSummary();
             fetchLogs();
             fetchWeekly();
@@ -282,7 +316,7 @@ const Nutrition = (() => {
         .catch(() => toast('Delete failed', true));
     }
 
-    // ─── FETCH DAILY SUMMARY ──────────────────────
+    // ─── FETCH DAILY SUMMARY → ring ───────────────
     function fetchSummary() {
         fetch(`/api/nutrition/summary/?date=${currentDate}`, {
             credentials: 'same-origin',
@@ -290,15 +324,62 @@ const Nutrition = (() => {
         })
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then(d => {
+            // Animate calorie counter
             animNum('nutr-cal-val', d.total_calories);
+
+            // Update macro pills
             if (el('nutr-prot-val')) el('nutr-prot-val').textContent = d.total_protein.toFixed(1) + 'g';
             if (el('nutr-carb-val')) el('nutr-carb-val').textContent = d.total_carbs.toFixed(1)   + 'g';
             if (el('nutr-fat-val'))  el('nutr-fat-val').textContent  = d.total_fats.toFixed(1)    + 'g';
+
+            // Update dynamic doughnut ring
             updateRing(d.total_protein, d.total_carbs, d.total_fats);
         })
         .catch(e => console.warn('fetchSummary error', e));
     }
 
+    function fetchWater() {
+        fetch(`/dashboard/progress-log/?date=${currentDate}`, {
+            credentials: 'same-origin',
+            headers: { 'X-CSRFToken': csrf() }
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+            waterCount = Math.max(0, Math.min(WATER_MAX, Number(data.water_intake || 0)));
+            updateGlasses();
+        })
+        .catch(e => console.warn('fetchWater error', e));
+    }
+
+    function saveWater() {
+        const body = new URLSearchParams({
+            date: currentDate,
+            water_intake: String(waterCount),
+        });
+
+        fetch('/dashboard/progress-log/', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                'X-CSRFToken': csrf()
+            },
+            body: body.toString()
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(() => {
+            if (typeof syncWaterToDashboard === 'function' && currentDate === todayStr()) {
+                syncWaterToDashboard(waterCount);
+            }
+            if (typeof loadHomeDashboard === 'function' && currentDate === todayStr()) {
+                homeDashboardLoaded = false;
+                loadHomeDashboard(true);
+            }
+        })
+        .catch(e => console.warn('saveWater error', e));
+    }
+
+    // ─── ANIMATED NUMBER ──────────────────────────
     function animNum(id, target) {
         const node = el(id);
         if (!node) return;
@@ -313,6 +394,7 @@ const Nutrition = (() => {
         requestAnimationFrame(tick);
     }
 
+    // ─── DOUGHNUT RING (dynamic) ──────────────────
     function updateRing(protein, carbs, fats) {
         const canvas = el('nutr-ring-canvas');
         if (!canvas || typeof Chart === 'undefined') return;
@@ -324,6 +406,7 @@ const Nutrition = (() => {
             : ['#2a2a2a', '#2a2a2a', '#2a2a2a'];
 
         if (ringChart) {
+            // Update in-place — no flicker
             ringChart.data.datasets[0].data             = data;
             ringChart.data.datasets[0].backgroundColor  = colors;
             ringChart.options.plugins.tooltip.enabled   = hasData;
@@ -331,6 +414,7 @@ const Nutrition = (() => {
             return;
         }
 
+        // First render
         ringChart = new Chart(canvas.getContext('2d'), {
             type: 'doughnut',
             data: {
@@ -356,7 +440,9 @@ const Nutrition = (() => {
                         borderWidth: 1,
                         titleColor: '#fff',
                         bodyColor: '#a0a0a0',
-                        callbacks: { label: ctx => ` ${ctx.parsed.toFixed(1)}g` }
+                        callbacks: {
+                            label: ctx => ` ${ctx.parsed.toFixed(1)}g`
+                        }
                     }
                 }
             }
@@ -391,6 +477,8 @@ const Nutrition = (() => {
         }
 
         let html = '';
+
+        // Always render groups in fixed order
         MT_ORDER.forEach(type => {
             const group = logs.filter(l => l.meal_type === type);
             if (!group.length) return;
@@ -448,9 +536,9 @@ const Nutrition = (() => {
         const prots  = days.map(d => d.protein);
 
         if (barChart) {
-            barChart.data.labels           = labels;
-            barChart.data.datasets[0].data = cals;
-            barChart.data.datasets[1].data = prots;
+            barChart.data.labels                   = labels;
+            barChart.data.datasets[0].data         = cals;
+            barChart.data.datasets[1].data         = prots;
             barChart.update('active');
             return;
         }
@@ -522,10 +610,7 @@ const Nutrition = (() => {
         });
     }
 
-    // ══════════════════════════════════════════════
     // WATER TRACKER
-    // ══════════════════════════════════════════════
-
     function buildGlasses() {
         const wrap = el('nutr-glasses');
         if (!wrap) return;
@@ -537,23 +622,10 @@ const Nutrition = (() => {
             btn.title = `Glass ${i + 1}`;
             btn.innerHTML = `<div class="nutr-glass-water"></div><span class="nutr-glass-drop">💧</span>`;
             btn.addEventListener('click', () => {
-                // Toggle: clicking a filled glass at position i sets count to i,
-                // clicking an unfilled glass at position i sets count to i+1
                 waterCount = i < waterCount ? i : i + 1;
                 waterCount = Math.max(0, Math.min(WATER_MAX, waterCount));
                 updateGlasses();
-
-                // ── Sync updated water count to the dashboard tile ──
-                if (typeof syncWaterToDashboard === 'function') {
-                    syncWaterToDashboard(waterCount);
-                }
-
-                // ── Also refresh smart summary insights if dashboard is loaded ──
-                if (typeof dashboardState !== 'undefined' && dashboardState.summaryData) {
-                    if (typeof renderInsights === 'function' && typeof buildDynamicInsights === 'function') {
-                        renderInsights(buildDynamicInsights(dashboardState.summaryData));
-                    }
-                }
+                saveWater();
             });
             wrap.appendChild(btn);
         }
@@ -570,7 +642,7 @@ const Nutrition = (() => {
         if (fill) fill.style.width = (waterCount / WATER_MAX * 100) + '%';
     }
 
-    // ─── TOAST ────────────────────────────────────
+    // TOAST
     function toast(msg, isErr = false) {
         const t   = el('nutr-toast');
         const ico = el('nutr-toast-icon');
@@ -588,40 +660,32 @@ const Nutrition = (() => {
         t._t = setTimeout(() => t.classList.remove('show'), 3200);
     }
 
-    // ══════════════════════════════════════════════
-    // PUBLIC API
-    // ══════════════════════════════════════════════
+    //  PUBLIC API
     return {
         init,
         del: deleteEntry,
-
-        /**
-         * Returns the current water cup count.
-         * Called by dashboard.js via getLiveWaterCount().
-         */
-        getWaterCount() {
-            return waterCount;
-        },
+        getWaterCount: () => currentDate === todayStr() ? waterCount : 0
     };
 
 })();
 
 
-// ─── Hook into navbar.js switchScreen ────────────────────────────────────────
+// Hook into navbar.js switchScreen
 document.addEventListener('DOMContentLoaded', () => {
     const _orig = window.switchScreen;
     window.switchScreen = function (screenId) {
         if (typeof _orig === 'function') _orig(screenId);
         if (screenId === 'nutrition-screen') {
+            // Tiny delay so the screen is display:block before we read canvas dimensions
             setTimeout(() => Nutrition.init(), 80);
         }
     };
 });
 
-
-// ══════════════════════════════════════════════════════════════════════════════
+//MEAL PLAN
+// ═══════════════════════════════════════════════════
 // MEAL PLAN
-// ══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
 
 let mealPlanData = null;
 let activePlanDay = 'monday';
@@ -636,6 +700,7 @@ async function loadMealPlan() {
         const noplan = document.getElementById('nutr-no-plan');
 
         if (res.status === 404) {
+            // User has no meal plan
             planSection.style.display = 'none';
             noplan.style.display = 'block';
             return;
@@ -647,14 +712,18 @@ async function loadMealPlan() {
         planSection.style.display = 'block';
         noplan.style.display = 'none';
 
+        // Set goal badge
         const goalBadge = document.getElementById('nutr-plan-goal');
         if (goalBadge) goalBadge.textContent = data.goal || '';
 
+        // Set daily targets
         renderPlanTargets(data.daily_targets);
 
+        // Set active day to today
         const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
         activePlanDay = data.days[todayName] ? todayName : 'monday';
 
+        // Highlight correct day tab
         document.querySelectorAll('.nutr-day-tab').forEach(tab => {
             tab.classList.toggle('active', tab.getAttribute('data-day') === activePlanDay);
         });

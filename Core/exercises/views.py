@@ -107,6 +107,8 @@ def reset_exercise_log(request, exercise_id):
 
 def sync_progress_log_from_exercise_log(user, exercise_log):
     today = timezone.localdate()
+    existing_log = ProgressLog.objects.filter(user=user, date=today).first()
+    preserved_water = existing_log.water_intake if existing_log else 0
     completed_today = ExerciseLog.objects.filter(
         user=user,
         updated_at__date=today,
@@ -117,14 +119,15 @@ def sync_progress_log_from_exercise_log(user, exercise_log):
     workout_done = completed_today.filter(sets_completed__gt=0).exists()
     steps = 4500 + (completed_today.count() * 1200) if workout_done else 0
 
-    if not workout_done and calories_burned == 0 and steps == 0:
+    if not workout_done and calories_burned == 0 and steps == 0 and preserved_water == 0:
         ProgressLog.objects.filter(user=user, date=today).delete()
         return
 
-    progress_log, _ = ProgressLog.objects.get_or_create(user=user, date=today)
+    progress_log = existing_log or ProgressLog.objects.create(user=user, date=today)
     progress_log.calories_burned = calories_burned
     progress_log.workout_done = workout_done
     progress_log.steps = steps
+    progress_log.water_intake = preserved_water
     if progress_log.is_empty():
         progress_log.delete()
         return

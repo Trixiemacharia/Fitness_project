@@ -80,21 +80,11 @@ function initDashboardEventHandlers() {
 // ACTIVITY SNAPSHOT — dynamic workout status based on day of week + water sync
 // ══════════════════════════════════════════════════════════════════════════════
 
-/**
- * Returns the dynamic workout status label.
- * Mon–Fri = active training days, Sat–Sun = rest days.
- * If a workout was actually logged today, that takes priority.
- */
 function getDynamicWorkoutStatus(activity) {
-    // If backend says a workout was logged today, always show that
     if (activity?.workout_done) return "Workout logged ✓";
-
-    const dayOfWeek = new Date().getDay(); // 0 = Sun, 6 = Sat
+    const dayOfWeek = new Date().getDay();
     const isRestDay = dayOfWeek === 0 || dayOfWeek === 6;
-
     if (isRestDay) return "Rest day 🛌";
-
-    // Weekday but no workout logged yet
     if (activity?.has_record) return "No workout yet";
     return "Training day — start a workout!";
 }
@@ -106,7 +96,6 @@ function renderActivitySnapshot(activity) {
     const stepsNode = document.getElementById("activitySteps");
     const waterNode = document.getElementById("activityWater");
 
-    // ── Dynamic workout status (day-of-week aware) ──
     const workoutStatus = getDynamicWorkoutStatus(activity);
 
     if (!activity?.has_record) {
@@ -117,7 +106,6 @@ function renderActivitySnapshot(activity) {
         if (caloriesNode) caloriesNode.textContent = "0 kcal";
         if (workoutNode) workoutNode.textContent = workoutStatus;
         if (stepsNode) stepsNode.textContent = "0";
-        // ── Water: pull from nutrition module's live count ──
         if (waterNode) waterNode.textContent = getLiveWaterCount() + " cups";
         return;
     }
@@ -129,7 +117,6 @@ function renderActivitySnapshot(activity) {
     if (caloriesNode) caloriesNode.textContent = `${activity.calories_burned || 0} kcal`;
     if (workoutNode) workoutNode.textContent = workoutStatus;
     if (stepsNode) stepsNode.textContent = formatNumber(activity.steps || 0);
-    // ── Water: prefer backend value, fall back to nutrition module count ──
     if (waterNode) {
         const backendWater = activity.water_intake || 0;
         const liveWater = getLiveWaterCount();
@@ -137,33 +124,23 @@ function renderActivitySnapshot(activity) {
     }
 }
 
-/**
- * Reads the current waterCount from the Nutrition module (nutrition.js).
- * Falls back to 0 if the module hasn't initialised yet or the user
- * hasn't opened the nutrition screen.
- */
 function getLiveWaterCount() {
-    // nutrition.js exposes waterCount via Nutrition.getWaterCount()
-    // (we add that getter below in the updated nutrition.js section)
     if (typeof Nutrition !== "undefined" && typeof Nutrition.getWaterCount === "function") {
         return Nutrition.getWaterCount();
     }
     return 0;
 }
 
-/**
- * Called by nutrition.js every time the water count changes.
- * Re-renders only the water tile on the dashboard without a full reload.
- */
 function syncWaterToDashboard(cups) {
     const waterNode = document.getElementById("activityWater");
     if (waterNode) waterNode.textContent = `${cups} cups`;
+    if (dashboardState?.summaryData?.today_activity) {
+        dashboardState.summaryData.today_activity.water_intake = cups;
+    }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// DAILY GOAL PROGRESS  (replaces weekly in the dashboard panel)
-// Shows: today's calorie burn vs daily target, today's workout status,
-// and a simple day-of-week indicator of whether this is a training day.
+// DAILY GOAL PROGRESS
 // ══════════════════════════════════════════════════════════════════════════════
 
 function renderDailyGoalProgress(goalProgress, todayActivity) {
@@ -173,49 +150,67 @@ function renderDailyGoalProgress(goalProgress, todayActivity) {
     const weeklyGoalNode = document.getElementById("weeklyGoalCounter");
     const subtextNode = document.getElementById("goalProgressSubtext");
     const caloriesBurnedNode = document.getElementById("caloriesBurnedMetric");
+    const caloriesTargetNode = document.getElementById("dailyCaloriesTarget");
     const caloriesRemainingNode = document.getElementById("caloriesRemainingMetric");
 
-    // ── Daily calorie target (from goal_progress or fallback) ──
-    const dailyTarget = goalProgress?.daily_calorie_target
+    // ── Resolve daily calorie target ──────────────────────────────────────────
+    // Prefer the explicit calorie_target field from views.py goal_progress block.
+    // Fall back to summing burned + remaining if available, then to 500 as last resort.
+    const dailyTarget = goalProgress?.calorie_target
         || (goalProgress?.calories_remaining != null && goalProgress?.calories_burned != null
             ? goalProgress.calories_burned + goalProgress.calories_remaining
             : 500);
 
     const caloriesBurned = Number(goalProgress?.calories_burned || todayActivity?.calories_burned || 0);
-    const caloriesRemaining = Math.max(0, dailyTarget - caloriesBurned);
 
-    // Percent of daily calorie goal achieved (capped at 100)
-    const dailyPercent = Math.min(100, Math.round((caloriesBurned / dailyTarget) * 100));
+    // ── Calories remaining — real arithmetic, never negative shown ────────────
+    const rawRemaining = dailyTarget - caloriesBurned;
 
-    // ── Whether today is a scheduled training day ──
-    const dayOfWeek = new Date().getDay();
-    const isRestDay = dayOfWeek === 0 || dayOfWeek === 6;
-    const workoutDone = todayActivity?.workout_done || false;
+    // ── Percent of daily calorie goal (capped at 100) ─────────────────────────
+    const dailyPercent = Math.min(100, Math.round((caloriesBurned / Math.max(dailyTarget, 1)) * 100));
 
-    // Label for "workouts" counter repurposed as today's workout status
-    const todayLabel = isRestDay ? "Rest Day" : (workoutDone ? "Done ✓" : "Pending");
-    const todayGoal = isRestDay ? "—" : "1";
+    const completedToday = Number(todayActivity?.completed_workouts_count || 0);
+    const dailyWorkoutTarget = Number(todayActivity?.daily_workout_target || 4);
+    const workoutDone = completedToday > 0;
+    const isRestDay = false;
 
+    // ── Percent node ─────────────────────────────────────────────────────────
     if (percentNode) percentNode.textContent = `${dailyPercent}%`;
 
-    // Repurpose counter as "Today's workout: Done / Pending"
+    // ── Today's workout counter — "0/1 workouts completed today" ─────────────
     if (completedNode) completedNode.textContent = workoutDone ? "1" : "0";
     if (weeklyGoalNode) weeklyGoalNode.textContent = isRestDay ? "—" : "1";
 
+    // ── Subtext below counter ─────────────────────────────────────────────────
     if (subtextNode) {
         if (isRestDay) {
             subtextNode.textContent = "Rest day — recovery is part of the plan.";
         } else if (workoutDone) {
-            subtextNode.textContent = "Today's workout complete! Great work.";
+            subtextNode.textContent = "1 of 1 workouts completed today";
         } else {
-            subtextNode.textContent = `${caloriesBurned} kcal burned so far today`;
+            subtextNode.textContent = "0 of 1 workouts completed today";
         }
     }
 
+    // ── Calories burned tile ──────────────────────────────────────────────────
     if (caloriesBurnedNode) caloriesBurnedNode.textContent = `${caloriesBurned} kcal`;
-    if (caloriesRemainingNode) caloriesRemainingNode.textContent = `${caloriesRemaining} left`;
+    if (completedNode) completedNode.textContent = String(Math.min(completedToday, dailyWorkoutTarget));
+    if (weeklyGoalNode) weeklyGoalNode.textContent = String(dailyWorkoutTarget);
+    if (subtextNode) subtextNode.textContent = `${Math.min(completedToday, dailyWorkoutTarget)} of ${dailyWorkoutTarget} workouts completed today`;
+    if (caloriesTargetNode) caloriesTargetNode.textContent = `${dailyTarget} kcal`;
 
-    // ── Ring animation ──
+    // ── Contextual calorie remaining message ──────────────────────────────────
+    if (caloriesRemainingNode) {
+        if (rawRemaining > 0) {
+            caloriesRemainingNode.textContent = `👉 ${rawRemaining} kcal away from today's goal`;
+            caloriesRemainingNode.style.color = "";          // default/theme colour
+        } else {
+            caloriesRemainingNode.textContent = `You've hit your goal 🎉`;
+            caloriesRemainingNode.style.color = "#16a34a";   // green
+        }
+    }
+
+    // ── Ring animation ────────────────────────────────────────────────────────
     if (!circle) return;
     const radius = 48;
     const circumference = 2 * Math.PI * radius;
@@ -226,19 +221,15 @@ function renderDailyGoalProgress(goalProgress, todayActivity) {
         circle.style.strokeDashoffset = `${circumference - (dailyPercent / 100) * circumference}`;
     });
 
-    // ── Update the panel eyebrow/header to say "Daily" not "Weekly" ──
-    const eyebrow = document.querySelector("#goalProgressContent")
-        ?.closest(".dashboard-panel")
-        ?.querySelector(".panel-eyebrow");
+    // ── Panel labels ──────────────────────────────────────────────────────────
+    const panel = document.getElementById("goalProgressContent")?.closest(".dashboard-panel");
+    const eyebrow = panel?.querySelector(".panel-eyebrow");
     if (eyebrow) eyebrow.textContent = "Daily Goal";
 
-    const panelTitle = document.querySelector("#goalProgressContent")
-        ?.closest(".dashboard-panel")
-        ?.querySelector("h3");
-    if (panelTitle) panelTitle.textContent = "Today's progress";
+    const panelTitle = panel?.querySelector("h3");
+    if (panelTitle) panelTitle.textContent = "Today's Progress";
 
-    // Update the "Workouts Completed" label to "Today's Workout"
-    const metricLabel = document.querySelector("#completedWorkoutsCounter")
+    const metricLabel = document.getElementById("completedWorkoutsCounter")
         ?.closest(".metric-card")
         ?.querySelector(".metric-label");
     if (metricLabel) metricLabel.textContent = "Today's Workout";
@@ -246,46 +237,40 @@ function renderDailyGoalProgress(goalProgress, todayActivity) {
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SMART SUMMARY — data-driven insights built from real user data
-// Each insight is dismissible and stays dismissed (localStorage).
 // ══════════════════════════════════════════════════════════════════════════════
 
-/**
- * Generates a list of insight objects from the full summary payload.
- * Each insight: { id: string, text: string }
- * IDs are stable so dismiss state persists across page loads.
- */
 function buildDynamicInsights(summary) {
     const insights = [];
     const weekly = summary?.weekly_stats || {};
     const today = summary?.today_activity || {};
     const goal = summary?.goal_progress || {};
-    const dayOfWeek = new Date().getDay(); // 0=Sun,6=Sat
+    const dayOfWeek = new Date().getDay();
 
-    // ── Streak insight ──
+    // ── Streak insight ────────────────────────────────────────────────────────
     const streak = weekly?.current_streak || 0;
     if (streak >= 3) {
-        insights.push({
-            id: `streak_${streak}`,
-            icon: "🔥",
-            text: `You're on a ${streak}-day streak — keep it going!`,
-        });
+        insights.push({ id: `streak_${streak}`, icon: "🔥", text: `You're on a ${streak}-day streak — keep it going!` });
     } else if (streak === 0) {
-        insights.push({
-            id: "streak_zero",
-            icon: "💪",
-            text: "Start a workout today to kick off your streak.",
-        });
+        insights.push({ id: "streak_zero", icon: "💪", text: "Start a workout today to kick off your streak." });
     }
 
-    // ── Calorie insight ──
+    // ── Calorie insight (daily) ───────────────────────────────────────────────
     const burned = today?.calories_burned || 0;
-    const dailyTarget = goal?.daily_calorie_target || 500;
+    const dailyTarget = goal?.calorie_target || goal?.daily_calorie_target || 500;
     const pct = dailyTarget > 0 ? Math.round((burned / dailyTarget) * 100) : 0;
-    if (burned > 0 && pct >= 80) {
+    const rawRemaining = dailyTarget - burned;
+
+    if (rawRemaining <= 0) {
+        insights.push({
+            id: `cal_goal_hit_${new Date().toDateString()}`,
+            icon: "🎉",
+            text: "You've hit your calorie burn goal today — excellent!",
+        });
+    } else if (burned > 0 && pct >= 80) {
         insights.push({
             id: `cal_great_${new Date().toDateString()}`,
             icon: "🎯",
-            text: `You've hit ${pct}% of your daily calorie goal. Excellent effort!`,
+            text: `You've hit ${pct}% of today's calorie goal — ${rawRemaining} kcal to go.`,
         });
     } else if (burned === 0 && dayOfWeek !== 0 && dayOfWeek !== 6) {
         insights.push({
@@ -293,72 +278,43 @@ function buildDynamicInsights(summary) {
             icon: "⚡",
             text: "No calories burned yet today — even a short walk counts.",
         });
+    } else if (burned > 0) {
+        insights.push({
+            id: `cal_progress_${new Date().toDateString()}`,
+            icon: "📊",
+            text: `${burned} kcal burned today — ${rawRemaining} kcal left to hit your daily goal.`,
+        });
     }
 
-    // ── Water intake insight ──
+    // ── Water intake insight (daily) ──────────────────────────────────────────
     const waterCups = getLiveWaterCount() || today?.water_intake || 0;
     if (waterCups === 0) {
-        insights.push({
-            id: `water_zero_${new Date().toDateString()}`,
-            icon: "💧",
-            text: "Remember to stay hydrated — log your first cup of water.",
-        });
-    } else if (waterCups >= 6) {
-        insights.push({
-            id: `water_great_${new Date().toDateString()}`,
-            icon: "💧",
-            text: `Great hydration! You've had ${waterCups} cups today.`,
-        });
+        insights.push({ id: `water_zero_${new Date().toDateString()}`, icon: "💧", text: "Remember to stay hydrated — log your first cup of water." });
+    } else if (waterCups >= 8) {
+        insights.push({ id: `water_great_${new Date().toDateString()}`, icon: "💧", text: `Great hydration! You've had ${waterCups} cups today.` });
     } else {
-        insights.push({
-            id: `water_mid_${new Date().toDateString()}`,
-            icon: "💧",
-            text: `${waterCups} cups logged — aim for 8 to stay fully hydrated.`,
-        });
+        insights.push({ id: `water_mid_${new Date().toDateString()}`, icon: "💧", text: `${waterCups} cups logged — aim for 8 to stay fully hydrated.` });
     }
 
-    // ── Workout consistency insight ──
-    const completedThisWeek = weekly?.completed_workouts || 0;
-    const weeklyGoal = weekly?.weekly_goal || 5;
-    if (completedThisWeek >= weeklyGoal) {
-        insights.push({
-            id: `weekly_complete_${new Date().toDateString()}`,
-            icon: "🏆",
-            text: `Weekly goal achieved — ${completedThisWeek}/${weeklyGoal} workouts done!`,
-        });
-    } else if (completedThisWeek > 0) {
-        const remaining = weeklyGoal - completedThisWeek;
-        insights.push({
-            id: `weekly_progress_${completedThisWeek}`,
-            icon: "📈",
-            text: `${completedThisWeek} of ${weeklyGoal} workouts done this week — ${remaining} to go.`,
-        });
+    // ── Today's workout insight ───────────────────────────────────────────────
+    const workoutDone = today?.workout_done || false;
+    if (workoutDone) {
+        insights.push({ id: `workout_done_${new Date().toDateString()}`, icon: "✅", text: "Today's workout is done — great consistency!" });
+    } else if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        insights.push({ id: `workout_pending_${new Date().toDateString()}`, icon: "🏋️", text: "No workout logged yet today — you've still got time!" });
     }
 
-    // ── Rest day insight ──
+    // ── Rest day insight ──────────────────────────────────────────────────────
     if (dayOfWeek === 0 || dayOfWeek === 6) {
-        insights.push({
-            id: `rest_day_${new Date().toDateString()}`,
-            icon: "🛌",
-            text: "It's your rest day — focus on recovery, stretching, and hydration.",
-        });
+        insights.push({ id: `rest_day_${new Date().toDateString()}`, icon: "🛌", text: "It's your rest day — focus on recovery, stretching, and hydration." });
     }
 
-    // ── Meal plan insight ──
+    // ── Meal plan insight ─────────────────────────────────────────────────────
     if (summary?.meal_plan_enabled && !summary?.meal_plan_preview) {
-        insights.push({
-            id: "meal_plan_missing",
-            icon: "🥗",
-            text: "Your meal plan is enabled but has no meals for today — check your nutrition tab.",
-        });
+        insights.push({ id: "meal_plan_missing", icon: "🥗", text: "Your meal plan is enabled but has no meals for today — check your nutrition tab." });
     }
-
     if (!summary?.meal_plan_enabled) {
-        insights.push({
-            id: "meal_plan_off",
-            icon: "🥗",
-            text: "Enable your meal plan in the Nutrition tab to get personalised meal suggestions.",
-        });
+        insights.push({ id: "meal_plan_off", icon: "🥗", text: "Enable your meal plan in the Nutrition tab to get personalised meal suggestions." });
     }
 
     return insights;
@@ -383,12 +339,7 @@ function renderInsights(insights) {
         <div class="insight-item" data-insight-id="${item.id}">
             <span class="insight-icon">${item.icon || "💡"}</span>
             <span class="insight-text">${item.text}</span>
-            <button
-                class="dismiss-insight-btn"
-                type="button"
-                aria-label="Dismiss insight"
-                onclick="dismissInsight('${item.id}')"
-            >✕</button>
+            <button class="dismiss-insight-btn" type="button" aria-label="Dismiss insight" onclick="dismissInsight('${item.id}')">✕</button>
         </div>
     `).join("");
 }
@@ -399,21 +350,16 @@ function dismissInsight(insightId) {
         dismissed.push(insightId);
         localStorage.setItem(DISMISSED_INSIGHTS_KEY, JSON.stringify(dismissed));
     }
-    // Re-render from cached summary — no extra network call
     if (dashboardState.summaryData) {
         renderInsights(buildDynamicInsights(dashboardState.summaryData));
     }
 }
 
 function getDismissedInsights() {
-    try {
-        return JSON.parse(localStorage.getItem(DISMISSED_INSIGHTS_KEY) || "[]");
-    } catch {
-        return [];
-    }
+    try { return JSON.parse(localStorage.getItem(DISMISSED_INSIGHTS_KEY) || "[]"); }
+    catch { return []; }
 }
 
-// ── Reminders remain dismissible as before ──
 function renderReminders(reminders) {
     const container = document.getElementById("dashboardReminders");
     if (!container) return;
@@ -424,8 +370,7 @@ function renderReminders(reminders) {
         ? visible.map((reminder) => `
             <div class="reminder-item" data-reminder-id="${reminder.id}">
                 <span class="reminder-text">${reminder.text}</span>
-                <button class="dismiss-reminder-btn" type="button"
-                    onclick="dismissDashboardReminder('${reminder.id}')">Dismiss</button>
+                <button class="dismiss-reminder-btn" type="button" onclick="dismissDashboardReminder('${reminder.id}')">Dismiss</button>
             </div>
         `).join("")
         : `<div class="reminder-item">No reminders right now.</div>`;
@@ -441,11 +386,8 @@ function dismissDashboardReminder(reminderId) {
 }
 
 function getDismissedReminders() {
-    try {
-        return JSON.parse(localStorage.getItem(DISMISSED_REMINDERS_KEY) || "[]");
-    } catch {
-        return [];
-    }
+    try { return JSON.parse(localStorage.getItem(DISMISSED_REMINDERS_KEY) || "[]"); }
+    catch { return []; }
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -497,7 +439,7 @@ function renderMealPlanPreview(enabled, preview) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// WEEKLY CHARTS (unchanged — Weekly Trends panel still uses weekly data)
+// WEEKLY CHARTS
 // ══════════════════════════════════════════════════════════════════════════════
 
 function renderWeeklyCharts(weeklyStats) {
@@ -528,16 +470,7 @@ function renderLineChart(canvasId, labels, data, label, borderColor) {
         type: "line",
         data: {
             labels,
-            datasets: [{
-                label,
-                data,
-                borderColor,
-                backgroundColor: `${borderColor}22`,
-                fill: true,
-                tension: 0.35,
-                pointRadius: 3,
-                pointBackgroundColor: borderColor,
-            }],
+            datasets: [{ label, data, borderColor, backgroundColor: `${borderColor}22`, fill: true, tension: 0.35, pointRadius: 3, pointBackgroundColor: borderColor }],
         },
         options: dashboardChartOptions(),
     });
@@ -553,13 +486,7 @@ function renderBarChart(canvasId, labels, data, label, backgroundColor) {
         type: "bar",
         data: {
             labels,
-            datasets: [{
-                label,
-                data,
-                backgroundColor,
-                borderRadius: 10,
-                borderSkipped: false,
-            }],
+            datasets: [{ label, data, backgroundColor, borderRadius: 10, borderSkipped: false }],
         },
         options: dashboardChartOptions(),
     });
@@ -571,15 +498,8 @@ function dashboardChartOptions() {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-            x: {
-                grid: { display: false },
-                ticks: { color: "#627488", font: { family: "Inter", size: 11 } },
-            },
-            y: {
-                grid: { color: "rgba(99, 117, 138, 0.12)" },
-                ticks: { color: "#627488", font: { family: "Inter", size: 11 } },
-                beginAtZero: true,
-            },
+            x: { grid: { display: false }, ticks: { color: "#627488", font: { family: "Inter", size: 11 } } },
+            y: { grid: { color: "rgba(99, 117, 138, 0.12)" }, ticks: { color: "#627488", font: { family: "Inter", size: 11 } }, beginAtZero: true },
         },
     };
 }
@@ -608,9 +528,7 @@ function renderWorkoutVideoGrid(videos) {
                     <span class="difficulty-badge">${video.difficulty || "Beginner"}</span>
                 </div>
                 <div class="video-title">${video.title}</div>
-                <div class="suggested-workout-meta">
-                    <span class="meta-chip">${video.target_muscle || "Full Body"}</span>
-                </div>
+                <div class="suggested-workout-meta"><span class="meta-chip">${video.target_muscle || "Full Body"}</span></div>
                 <button class="ghost-action" type="button" onclick="openWorkoutVideoModalById(${video.id})">Watch video</button>
             </div>
         </article>
@@ -629,36 +547,24 @@ function renderSuggestedWorkoutList(workouts) {
             </div>
             <div class="suggested-workout-meta">
                 <span class="meta-chip">${workout.duration}</span>
-                <span class="meta-chip">${workout.target_muscle}</span>
+                <span class="meta-chip">${workout.exercise_type === "cardio" ? `${workout.estimated_calories_burned || 0} kcal` : workout.target_muscle}</span>
             </div>
             <div>${workout.description || "Recommended based on your current focus and fitness level."}</div>
-            <button class="primary-cta" type="button" onclick="openSuggestedWorkout(${workout.id})">Start workout</button>
+            <button class="primary-cta" type="button" onclick="openSuggestedWorkout(${workout.id})">${workout.video_url ? "Start workout" : "View workout"}</button>
         </article>
     `).join("");
 }
 
 function openSuggestedWorkout(workoutId) {
     const workout = (dashboardState.suggestedWorkouts || []).find((item) => item.id === workoutId);
-    if (workout) openWorkoutVideoModal({
-        id: workout.id,
-        title: workout.name,
-        description: workout.description,
-        video_url: workout.video_url,
-        computed_sets: workout.computed_sets,
-    });
+    if (workout) openWorkoutVideoModal({ id: workout.id, title: workout.name, description: workout.description, video_url: workout.video_url, computed_sets: workout.computed_sets });
 }
 
 function openWorkoutVideoModalById(videoId) {
     const item = (dashboardState.workoutVideos || []).find((video) => video.id === videoId)
         || (dashboardState.suggestedWorkouts || []).find((workout) => workout.id === videoId);
     if (!item) return;
-    openWorkoutVideoModal({
-        id: item.id,
-        title: item.title || item.name,
-        description: item.description,
-        video_url: item.video_url,
-        computed_sets: item.computed_sets,
-    });
+    openWorkoutVideoModal({ id: item.id, title: item.title || item.name, description: item.description, video_url: item.video_url, computed_sets: item.computed_sets });
 }
 
 function openWorkoutVideoModal(item) {
@@ -671,11 +577,19 @@ function openWorkoutVideoModal(item) {
 
     title.textContent = item.title || "Workout video";
     description.textContent = item.description || "Follow along with this workout demo.";
-    player.innerHTML = item.video_url ? `<source src="${item.video_url}" type="video/mp4">` : "";
+    if (item.video_url) {
+        player.style.display = "block";
+        player.innerHTML = `<source src="${item.video_url}" type="video/mp4">`;
+    } else {
+        player.pause();
+        player.removeAttribute("src");
+        player.innerHTML = "";
+        player.style.display = "none";
+    }
     completeBtn.dataset.exerciseId = item.id || "";
     completeBtn.dataset.totalSets = item.computed_sets || 3;
     modal.classList.add("show");
-    player.load();
+    if (item.video_url) player.load();
 }
 
 function closeWorkoutVideoModal() {
@@ -689,26 +603,16 @@ async function markWorkoutVideoComplete() {
     const button = document.getElementById("markWorkoutCompleteBtn");
     const exerciseId = Number(button?.dataset.exerciseId || 0);
     const totalSets = Number(button?.dataset.totalSets || 3);
-    if (!exerciseId) {
-        closeWorkoutVideoModal();
-        return;
-    }
+    if (!exerciseId) { closeWorkoutVideoModal(); return; }
 
     try {
         const response = await fetch(`${API_BASE}/logs/update/`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-            },
+            headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
             body: JSON.stringify({ exercise_id: exerciseId, sets_completed: totalSets }),
         });
         const data = await response.json();
-        userLogs[exerciseId] = {
-            sets_completed: data.sets_completed,
-            total_sets: data.total_sets,
-            status: data.status,
-        };
+        userLogs[exerciseId] = { sets_completed: data.sets_completed, total_sets: data.total_sets, status: data.status };
         closeWorkoutVideoModal();
         showCompletionToast("Workout completed.");
         homeDashboardLoaded = false;
@@ -734,7 +638,6 @@ async function loadFeedbackThread() {
             container.innerHTML = '<div class="feedback-thread-item"><div>No feedback sent yet.</div></div>';
             return;
         }
-
         container.innerHTML = entries.map((entry) => `
             <div class="feedback-thread-item">
                 <div class="feedback-thread-meta">
@@ -745,10 +648,7 @@ async function loadFeedbackThread() {
                 <div>${entry.message}</div>
                 ${entry.admin_response ? `
                     <div class="feedback-admin-response">
-                        <div class="feedback-response-meta">
-                            <strong>Admin reply</strong>
-                            <span>${entry.responded_at}</span>
-                        </div>
+                        <div class="feedback-response-meta"><strong>Admin reply</strong><span>${entry.responded_at}</span></div>
                         <div>${entry.admin_response}</div>
                     </div>
                 ` : ""}
@@ -786,7 +686,7 @@ async function submitFeedbackEntry(event) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// CATEGORIES / EXERCISES — unchanged
+// CATEGORIES / EXERCISES
 // ══════════════════════════════════════════════════════════════════════════════
 
 async function loadCategories() {
@@ -805,11 +705,7 @@ async function loadLogs() {
         const data = await response.json();
         userLogs = {};
         data.forEach((log) => {
-            userLogs[log.exercise_id] = {
-                sets_completed: log.sets_completed,
-                total_sets: log.total_sets,
-                status: log.status,
-            };
+            userLogs[log.exercise_id] = { sets_completed: log.sets_completed, total_sets: log.total_sets, status: log.status };
         });
     } catch (error) {
         console.error("Failed to load logs:", error);
@@ -824,9 +720,7 @@ function initChips() {
             chip.classList.add("selected");
             activeLevel = chip.getAttribute("data-level");
             updateLevelTag();
-            if (currentCategory && exercisesSection.style.display !== "none") {
-                renderExercises(currentCategory.exercises);
-            }
+            if (currentCategory && exercisesSection.style.display !== "none") renderExercises(currentCategory.exercises);
         });
     });
 
@@ -848,9 +742,7 @@ function updateMuscleChips() {
     const relevantMuscles = new Set();
     allCategories.forEach((category) => {
         if (activeType === "all" || category.training_type === activeType) {
-            (category.muscle_groups || []).forEach((group) => {
-                relevantMuscles.add(`${group.name}|${group.display_name}`);
-            });
+            (category.muscle_groups || []).forEach((group) => relevantMuscles.add(`${group.name}|${group.display_name}`));
         }
     });
 
@@ -875,10 +767,7 @@ function makeChip(label, value, type) {
     chip.addEventListener("click", () => {
         document.querySelectorAll(`[data-${type}]`).forEach((node) => node.classList.remove("selected"));
         chip.classList.add("selected");
-        if (type === "muscle") {
-            activeMuscle = value;
-            renderCategoryCards();
-        }
+        if (type === "muscle") { activeMuscle = value; renderCategoryCards(); }
     });
     return chip;
 }
@@ -894,18 +783,11 @@ function renderCategoryCards() {
     });
 
     if (!filtered.length) {
-        cardContainer.innerHTML = `
-            <div class="empty-state">
-                <p class="empty-msg">No categories match</p>
-                <p class="empty-sub">Try a different filter.</p>
-            </div>
-        `;
+        cardContainer.innerHTML = `<div class="empty-state"><p class="empty-msg">No categories match</p><p class="empty-sub">Try a different filter.</p></div>`;
         return;
     }
 
-    filtered.forEach((category, index) => {
-        cardContainer.appendChild(buildCategoryCard(category, index));
-    });
+    filtered.forEach((category, index) => cardContainer.appendChild(buildCategoryCard(category, index)));
 }
 
 function buildCategoryCard(category, index) {
@@ -947,18 +829,11 @@ function renderExercises(exercises) {
     const filtered = (exercises || []).filter((exercise) => exercise.level === activeLevel);
 
     if (!filtered.length) {
-        exercisesList.innerHTML = `
-            <div class="empty-state">
-                <p class="empty-msg">No ${activeLevel} exercises yet</p>
-                <p class="empty-sub">Switch level or check back soon.</p>
-            </div>
-        `;
+        exercisesList.innerHTML = `<div class="empty-state"><p class="empty-msg">No ${activeLevel} exercises yet</p><p class="empty-sub">Switch level or check back soon.</p></div>`;
         return;
     }
 
-    filtered.forEach((exercise) => {
-        exercisesList.appendChild(buildExerciseCard(exercise));
-    });
+    filtered.forEach((exercise) => exercisesList.appendChild(buildExerciseCard(exercise)));
 }
 
 function buildExerciseCard(exercise) {
@@ -967,19 +842,18 @@ function buildExerciseCard(exercise) {
     div.setAttribute("data-exercise-id", exercise.id);
 
     let mediaSide = "";
-    if (exercise.image) {
-        mediaSide = `<div class="exercise-img-side"><img src="${exercise.image}" alt="${exercise.name}" loading="lazy"></div>`;
-    } else if (exercise.demo_video) {
-        mediaSide = `<div class="exercise-video-side"><video muted loop playsinline><source src="${exercise.demo_video}" type="video/mp4"></video></div>`;
+    if (exercise.exercise_type === "cardio") {
+        mediaSide = "";
+    } else if (exercise.display_image) {
+        mediaSide = `<div class="exercise-img-side"><img src="${exercise.display_image}" alt="${exercise.name}" loading="lazy"></div>`;
+    } else if (exercise.display_video) {
+        mediaSide = `<div class="exercise-video-side"><video muted loop playsinline><source src="${exercise.display_video}" type="video/mp4"></video></div>`;
     } else {
         mediaSide = `<div class="exercise-no-media">${getCategoryIcon(exercise.exercise_type)}</div>`;
     }
 
     const stats = (exercise.stats || []).map((stat) => `
-        <div class="stat-item">
-            <span class="stat-label">${stat.label}</span>
-            <span class="stat-value">${stat.value}</span>
-        </div>
+        <div class="stat-item"><span class="stat-label">${stat.label}</span><span class="stat-value">${stat.value}</span></div>
     `).join("");
 
     div.innerHTML = `
@@ -1004,9 +878,7 @@ function buildStatusBar(log, exercise) {
     const done = log.sets_completed;
     const total = log.total_sets || exercise.computed_sets || 3;
     const pct = Math.min(100, Math.round((done / total) * 100));
-    if (log.status === "completed") {
-        return `<div class="completion-bar completed">Completed - ${done}/${total} sets</div>`;
-    }
+    if (log.status === "completed") return `<div class="completion-bar completed">Completed - ${done}/${total} sets</div>`;
     return `
         <div class="completion-bar in-progress">
             <div class="completion-bar-fill" style="width:${pct}%"></div>
@@ -1020,28 +892,20 @@ function showExerciseDetail(exercise) {
 
     const log = userLogs[exercise.id] || { sets_completed: 0, total_sets: exercise.computed_sets || 3, status: "not_started" };
     const totalSets = exercise.computed_sets || 3;
-    const heroStyle = exercise.image
-        ? `background:url('${exercise.image}') center/cover no-repeat;`
+    const heroStyle = exercise.display_image
+        ? `background:url('${exercise.display_image}') center/cover no-repeat;`
         : `background:${getTypeGradient(exercise.exercise_type)};`;
 
     const statsChips = (exercise.stats || []).map((stat) => `
-        <div class="detail-stat">
-            <span class="detail-stat-label">${stat.label}</span>
-            <span class="detail-stat-value">${stat.value}</span>
-        </div>
+        <div class="detail-stat"><span class="detail-stat-label">${stat.label}</span><span class="detail-stat-value">${stat.value}</span></div>
     `).join("");
 
     const instructions = (exercise.instructions_list || []).map((step, index) => `
-        <li class="instruction-step">
-            <span class="step-num">${index + 1}</span>
-            <span>${step.replace(/^\d+\.\s*/, "")}</span>
-        </li>
+        <li class="instruction-step"><span class="step-num">${index + 1}</span><span>${step.replace(/^\d+\.\s*/, "")}</span></li>
     `).join("");
 
     const setCircles = Array.from({ length: totalSets }, (_, index) => `
-        <button class="set-circle ${index < log.sets_completed ? "done" : ""}"
-                data-set-index="${index}"
-                onclick="toggleSet(${exercise.id}, ${index}, ${totalSets})">
+        <button class="set-circle ${index < log.sets_completed ? "done" : ""}" data-set-index="${index}" onclick="toggleSet(${exercise.id}, ${index}, ${totalSets})">
             ${index < log.sets_completed ? "✓" : index + 1}
         </button>
     `).join("");
@@ -1060,7 +924,8 @@ function showExerciseDetail(exercise) {
             <div class="detail-stats-row">${statsChips}</div>
             ${exercise.description ? `<div class="detail-section"><h3 class="detail-section-title">About</h3><p class="detail-description">${exercise.description}</p></div>` : ""}
             ${instructions ? `<div class="detail-section"><h3 class="detail-section-title">How To</h3><ol class="instructions-list">${instructions}</ol></div>` : ""}
-            ${exercise.demo_video ? `<div class="detail-section"><h3 class="detail-section-title">Form Demo</h3><div class="detail-video-wrap"><video controls><source src="${exercise.demo_video}" type="video/mp4"></video></div></div>` : ""}
+            ${exercise.cardio_tips_list?.length ? `<div class="detail-section"><h3 class="detail-section-title">Cardio Tips</h3><ol class="instructions-list">${exercise.cardio_tips_list.map((tip, index) => `<li class="instruction-step"><span class="step-num">${index + 1}</span><span>${tip}</span></li>`).join("")}</ol></div>` : ""}
+            ${exercise.display_video ? `<div class="detail-section"><h3 class="detail-section-title">Form Demo</h3><div class="detail-video-wrap"><video controls><source src="${exercise.display_video}" type="video/mp4"></video></div></div>` : ""}
             <div class="detail-section">
                 <h3 class="detail-section-title">Sets Tracker</h3>
                 <p class="sets-sub">Tap each circle as you complete the set.</p>
@@ -1083,18 +948,11 @@ async function toggleSet(exerciseId, setIndex, totalSets) {
     try {
         const response = await fetch(`${API_BASE}/logs/update/`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie("csrftoken"),
-            },
+            headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") },
             body: JSON.stringify({ exercise_id: exerciseId, sets_completed: setsCompleted }),
         });
         const data = await response.json();
-        userLogs[exerciseId] = {
-            sets_completed: data.sets_completed,
-            total_sets: data.total_sets,
-            status: data.status,
-        };
+        userLogs[exerciseId] = { sets_completed: data.sets_completed, total_sets: data.total_sets, status: data.status };
         updateSetCircles(exerciseId, data.sets_completed);
         updateExerciseCard(exerciseId);
         if (data.status === "completed") {
@@ -1152,17 +1010,14 @@ function closeDetail() {
     exercisesSection.style.display = "block";
 }
 
-// ── Search ──
+// ── Search ────────────────────────────────────────────────────────────────────
 const searchInput = document.getElementById("search-workout");
 let debounceTimer;
 searchInput?.addEventListener("input", () => {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
         const query = searchInput.value.trim();
-        if (!query) {
-            renderCategoryCards();
-            return;
-        }
+        if (!query) { renderCategoryCards(); return; }
 
         fetch(`/dashboard/search/?q=${encodeURIComponent(query)}`)
             .then((response) => response.json())
@@ -1181,7 +1036,7 @@ searchInput?.addEventListener("input", () => {
     }, 300);
 });
 
-// ── Profile panel ──
+// ── Profile panel ─────────────────────────────────────────────────────────────
 const avatarBtn = document.getElementById("avatarBtn");
 const profilePanel = document.getElementById("profilePanel");
 avatarBtn?.addEventListener("click", (event) => {
@@ -1270,13 +1125,11 @@ function animateCounter(node, target) {
     const duration = 900;
     const startTime = performance.now();
     const initial = Number(node.textContent) || 0;
-
     function tick(now) {
         const progress = Math.min((now - startTime) / duration, 1);
         node.textContent = Math.round(initial + ((target - initial) * progress));
         if (progress < 1) requestAnimationFrame(tick);
     }
-
     requestAnimationFrame(tick);
 }
 
@@ -1286,17 +1139,9 @@ function getProgressColor(percent) {
     return "#dc2626";
 }
 
-function formatNumber(value) {
-    return Number(value || 0).toLocaleString();
-}
-
-function trimNumber(value) {
-    return Number(value || 0).toFixed(1).replace(".0", "");
-}
-
-function capitalize(value) {
-    return value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
-}
+function formatNumber(value) { return Number(value || 0).toLocaleString(); }
+function trimNumber(value) { return Number(value || 0).toFixed(1).replace(".0", ""); }
+function capitalize(value) { return value ? value.charAt(0).toUpperCase() + value.slice(1) : ""; }
 
 function showCompletionToast(message) {
     const toast = document.createElement("div");

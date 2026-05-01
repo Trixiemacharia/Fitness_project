@@ -195,6 +195,10 @@ AWS_ACCESS_KEY_ID = config("CLOUDFLARE_R2_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = config("CLOUDFLARE_R2_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = config("CLOUDFLARE_R2_BUCKET_NAME")
 AWS_S3_ENDPOINT_URL = f"https://{config('CLOUDFLARE_R2_ACCOUNT_ID')}.r2.cloudflarestorage.com"
+R2_PUBLIC_BASE_URL = config(
+    "CLOUDFLARE_R2_PUBLIC_BASE_URL",
+    default="https://pub-a3e3770ca86b453197bf4160321b1b0a.r2.dev"
+).rstrip("/")
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "max-age=86400",
 }

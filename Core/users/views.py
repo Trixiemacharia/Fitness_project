@@ -1,7 +1,7 @@
-import random
-from datetime import timedelta
+import hashlib
+from datetime import datetime, timedelta
 
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from .forms import OnboardingForm
 from django.contrib.auth.decorators import login_required
@@ -11,6 +11,7 @@ from django.db.models import Q, Sum
 from exercises.serializers import CategorySerializer
 from nutrition.models import MealLog
 from users.models import Feedback, MealPlan, ProgressLog, UserProfile
+
 
 @login_required
 def create_profile(request):
@@ -23,12 +24,14 @@ def create_profile(request):
             return redirect('dashboard')
         else:
             form = OnboardingForm()
-            return render(request, 'onboarding.html',{'form':form})
+            return render(request, 'onboarding.html', {'form': form})
+
 
 @login_required
 def view_profile(request):
     profile = request.user.profile
-    return render(request,'profile_detail.html',{'profile':profile})
+    return render(request, 'profile_detail.html', {'profile': profile})
+
 
 @login_required
 def update_profile(request):
@@ -40,30 +43,32 @@ def update_profile(request):
             return redirect(view_profile)
         else:
             form = OnboardingForm(instance=profile)
-            return render(request,'profile_edit.html',{'form': form})
-        
+            return render(request, 'profile_edit.html', {'form': form})
+
+
 @login_required
 def delete_profile(request):
     profile = request.user.profile
     if request.method == 'POST':
         profile.delete()
         return redirect('home')
-    return render(request,'confirm_delete.html')
+    return render(request, 'confirm_delete.html')
+
 
 @login_required
 def dashboard(request):
     try:
-            profile = request.user.profile
-    except:
+        profile = request.user.profile
+    except Exception:
         return redirect("onboarding")
 
     categories = Category.objects.all()
 
     return render(request, "users/dashboard.html", {
         "profile": profile,
-        "categories": categories
+        "categories": categories,
     })
-    
+
 
 @login_required
 def search_dashboard_workouts(request):
@@ -80,6 +85,7 @@ def search_dashboard_workouts(request):
     serializer = CategorySerializer(categories, many=True, context={'request': request})
     return JsonResponse({'results': serializer.data})
 
+
 @login_required
 def upload_profile_image(request):
     if request.method == 'POST':
@@ -91,10 +97,11 @@ def upload_profile_image(request):
             profile.save()
             return JsonResponse({
                 'success': True,
-                'image_url': profile.profile_image.url
+                'image_url': profile.profile_image.url,
             })
 
     return JsonResponse({'success': False})
+
 
 @login_required
 def toggle_backup_reminder(request):
@@ -115,18 +122,41 @@ def dashboard_summary(request):
     calorie_target = _get_daily_calorie_target(profile)
 
     today_log = ProgressLog.objects.filter(user=request.user, date=today).first()
-    week_logs = ProgressLog.objects.filter(user=request.user, date__range=(week_start, week_end)).order_by('date')
-    meal_logs_today = MealLog.objects.filter(user=request.user, date=today).select_related('food_item')
+    week_logs = ProgressLog.objects.filter(
+        user=request.user, date__range=(week_start, week_end)
+    ).order_by('date')
+    meal_logs_today = MealLog.objects.filter(
+        user=request.user, date=today
+    ).select_related('food_item')
 
-    completed_workouts = week_logs.filter(workout_done=True).count()
+    # ── Weekly stats (used for charts only) ──────────────────────────
+    completed_workouts_week = week_logs.filter(workout_done=True).count()
+    completed_today_count = _get_completed_workouts_today_count(request.user, today)
+    daily_workout_target = 4
     weekly_calories = week_logs.aggregate(total=Sum('calories_burned'))['total'] or 0
     weekly_calorie_target = calorie_target * 7
     weekly_progress = min(
-        round((completed_workouts / max(weekly_goal, 1)) * 100),
+        round((completed_workouts_week / max(weekly_goal, 1)) * 100),
         100,
     )
 
-    suggestions = _get_suggested_workouts(profile)
+    # ── Today's stats ────────────────────────────────────────────────
+    calories_burned_today = today_log.calories_burned if today_log else 0
+    completed_today = today_log.workout_done if today_log else False
+
+    # ── Daily calorie progress ───────────────────────────────────────
+    calories_remaining = calorie_target - calories_burned_today  # can be negative
+    progress_percent = min(
+        round((calories_burned_today / max(calorie_target, 1)) * 100), 100
+    )
+
+    # Contextual calorie-remaining message
+    if calories_remaining > 0:
+        calorie_message = f"You're {calories_remaining} kcal away from today's goal"
+    else:
+        calorie_message = "You've hit your goal 🎉"
+
+    suggestions = _get_suggested_workouts(profile, request.user, today)
     workout_videos = _get_workout_videos(suggestions, limit=3)
     meal_plan_preview = _build_meal_plan_preview(request.user, today, profile.wants_meal_plan)
 
@@ -148,21 +178,38 @@ def dashboard_summary(request):
             'calories_burned': calories,
         })
 
-    reminders = _build_dashboard_reminders(meal_logs_today, today_log, completed_workouts, weekly_goal)
-    insights = _build_dashboard_insights(week_logs, weekly_goal, weekly_calories, weekly_calorie_target)
+    # ── Daily reminders & insights ───────────────────────────────────
+    reminders = _build_dashboard_reminders(meal_logs_today, today_log, completed_today)
+    insights = _build_dashboard_insights(today_log, calorie_target, completed_today)
 
     today_progress = None
     if today_log:
-        calories_remaining = max(calorie_target - today_log.calories_burned, 0)
         today_progress = {
             'date': today.isoformat(),
-            'progress_percent': min(round((today_log.calories_burned / max(calorie_target, 1)) * 100), 100),
-            'calories_burned': today_log.calories_burned,
+            'progress_percent': progress_percent,
+            'calories_burned': calories_burned_today,
             'calorie_target': calorie_target,
+            # Raw number for JS to build its own message if needed
             'calories_remaining': calories_remaining,
+            # Human-readable contextual message
+            'calorie_message': calorie_message,
             'workout_done': today_log.workout_done,
             'steps': today_log.steps,
             'water_intake': today_log.water_intake,
+            'water_goal': 8,
+        }
+    else:
+        # No log yet — still expose target so UI can show it
+        today_progress = {
+            'date': today.isoformat(),
+            'progress_percent': 0,
+            'calories_burned': 0,
+            'calorie_target': calorie_target,
+            'calories_remaining': calorie_target,
+            'calorie_message': f"You're {calorie_target} kcal away from today's goal",
+            'workout_done': False,
+            'steps': 0,
+            'water_intake': 0,
             'water_goal': 8,
         }
 
@@ -171,22 +218,27 @@ def dashboard_summary(request):
             'has_record': today_log is not None,
             'message': '' if today_log else 'No activity recorded today',
             'date': today.isoformat(),
-            'calories_burned': today_log.calories_burned if today_log else 0,
+            'calories_burned': calories_burned_today,
             'steps': today_log.steps if today_log else 0,
             'water_intake': today_log.water_intake if today_log else 0,
-            'workout_done': today_log.workout_done if today_log else False,
+            'workout_done': completed_today,
+            'completed_workouts_count': completed_today_count,
+            'daily_workout_target': daily_workout_target,
         },
         'goal_progress': today_progress,
         'weekly_stats': {
             'week_start': week_start.isoformat(),
             'week_end': week_end.isoformat(),
             'weekly_goal': weekly_goal,
-            'completed_workouts': completed_workouts,
+            'completed_workouts': completed_workouts_week,
+            'completed_today': completed_today_count,
+            'daily_workout_target': daily_workout_target,
             'progress_percent': weekly_progress,
             'weekly_calories': weekly_calories,
             'weekly_calorie_target': weekly_calorie_target,
             'activity_series': activity_series,
             'calorie_balance': calorie_balance,
+            'current_streak': _get_current_workout_streak(request.user, today),
         },
         'meal_plan_enabled': profile.wants_meal_plan,
         'meal_plan_preview': meal_plan_preview,
@@ -197,6 +249,8 @@ def dashboard_summary(request):
     })
 
 
+# ── Helpers ────────────────────────────────────────────────────────────────────
+
 def _get_weekly_goal(user):
     preferred_days = []
     if hasattr(user, 'preferences') and user.preferences.preferred_days:
@@ -205,10 +259,14 @@ def _get_weekly_goal(user):
 
 
 def _get_daily_calorie_target(profile):
+    """
+    Returns how many kcal the user should aim to burn TODAY based on their goal.
+    Values are intentional and goal-driven — not random.
+    """
     targets = {
         'lose_weight': 450,
         'tone': 400,
-        'bulk': 350,
+        'bulk': 300,
     }
     return targets.get(profile.goal_type, 400)
 
@@ -250,7 +308,7 @@ def _build_meal_plan_preview(user, today, wants_meal_plan):
                     'calories': item.calories,
                 }
                 for item in items
-            ]
+            ],
         })
 
     return {
@@ -261,7 +319,15 @@ def _build_meal_plan_preview(user, today, wants_meal_plan):
     }
 
 
-def _get_suggested_workouts(profile, limit=4):
+def _stable_daily_order(exercises, user, day):
+    def score(exercise):
+        key = f"{user.id}:{day.isoformat()}:{exercise.id}".encode('utf-8')
+        return hashlib.md5(key).hexdigest()
+
+    return sorted(exercises, key=score)
+
+
+def _get_suggested_workouts(profile, user, day, limit=4):
     focus_map = {
         'glutes': ['glutes', 'lower_body'],
         'legs': ['lower_body', 'glutes'],
@@ -275,7 +341,9 @@ def _get_suggested_workouts(profile, limit=4):
     for focus in focus_areas:
         target_groups.extend(focus_map.get(focus, []))
 
-    base_qs = Exercise.objects.select_related('muscle_group', 'category').filter(level=profile.fitness_level)
+    base_qs = Exercise.objects.select_related('muscle_group', 'category').filter(
+        level=profile.fitness_level
+    )
     relevant_filter = Q()
     if target_groups:
         relevant_filter |= Q(muscle_group__name__in=target_groups)
@@ -285,32 +353,35 @@ def _get_suggested_workouts(profile, limit=4):
             relevant_filter |= Q(description__icontains=focus.replace('_', ' '))
 
     relevant = list(base_qs.filter(relevant_filter).distinct()) if relevant_filter else []
-    fallback = list(base_qs.exclude(id__in=[exercise.id for exercise in relevant]))
+    fallback = list(base_qs.exclude(id__in=[e.id for e in relevant]))
     if len(relevant) < limit:
         fallback.extend(
             list(
                 Exercise.objects.select_related('muscle_group', 'category')
-                .exclude(id__in=[exercise.id for exercise in relevant + fallback])
+                .exclude(id__in=[e.id for e in relevant + fallback])
             )
         )
 
-    random.shuffle(relevant)
-    random.shuffle(fallback)
-    picked = (relevant + fallback)[:max(limit, 3)]
+    ordered = _stable_daily_order(relevant, user, day) + _stable_daily_order(fallback, user, day)
+    picked = ordered[:max(limit, 4)]
 
     return [
         {
-            'id': exercise.id,
-            'name': exercise.name,
-            'duration': _exercise_duration_label(exercise),
-            'difficulty': exercise.get_level_display(),
-            'target_muscle': exercise.muscle_group.get_name_display() if exercise.muscle_group else exercise.category.name,
-            'description': exercise.description,
-            'video_url': exercise.demo_video or '',
-            'thumbnail': exercise.image.url if exercise.image else '',
-            'computed_sets': exercise.get_sets(),
+            'id': e.id,
+            'name': e.name,
+            'duration': _exercise_duration_label(e),
+            'difficulty': e.get_level_display(),
+            'target_muscle': (
+                e.muscle_group.get_name_display() if e.muscle_group else e.category.name
+            ),
+            'description': e.description,
+            'video_url': e.get_demo_video_url(),
+            'thumbnail': e.get_image_url(),
+            'computed_sets': e.get_sets(),
+            'exercise_type': e.exercise_type,
+            'estimated_calories_burned': e.get_estimated_calories_burned(),
         }
-        for exercise in picked
+        for e in picked
     ]
 
 
@@ -319,34 +390,23 @@ def _get_workout_videos(suggestions, limit=3):
     videos = list(
         Exercise.objects.select_related('muscle_group')
         .filter(id__in=suggestion_ids)
-        .exclude(demo_video__isnull=True)
-        .exclude(demo_video='')
     )
-    if len(videos) < limit:
-        existing_ids = [item.id for item in videos]
-        filler = list(
-            Exercise.objects.select_related('muscle_group')
-            .exclude(id__in=existing_ids)
-            .exclude(demo_video__isnull=True)
-            .exclude(demo_video='')
-        )
-        random.shuffle(filler)
-        videos.extend(filler[:limit - len(videos)])
-
-    random.shuffle(videos)
+    videos = [video for video in videos if video.get_demo_video_url()]
     return [
         {
-            'id': exercise.id,
-            'title': exercise.name,
-            'duration': _exercise_duration_label(exercise),
-            'difficulty': exercise.get_level_display(),
-            'target_muscle': exercise.muscle_group.get_name_display() if exercise.muscle_group else exercise.category.name,
-            'description': exercise.description,
-            'thumbnail': exercise.image.url if exercise.image else '',
-            'video_url': exercise.demo_video,
-            'computed_sets': exercise.get_sets(),
+            'id': e.id,
+            'title': e.name,
+            'duration': _exercise_duration_label(e),
+            'difficulty': e.get_level_display(),
+            'target_muscle': (
+                e.muscle_group.get_name_display() if e.muscle_group else e.category.name
+            ),
+            'description': e.description,
+            'thumbnail': e.get_image_url(),
+            'video_url': e.get_demo_video_url(),
+            'computed_sets': e.get_sets(),
         }
-        for exercise in videos[:limit]
+        for e in videos[:limit]
     ]
 
 
@@ -362,30 +422,71 @@ def _exercise_duration_label(exercise):
     return "12 min"
 
 
-def _build_dashboard_reminders(meal_logs_today, today_log, completed_workouts, weekly_goal):
+def _get_completed_workouts_today_count(user, today):
+    logs = ExerciseLog.objects.filter(user=user, updated_at__date=today).select_related('exercise')
+    return sum(1 for log in logs if log.is_completed)
+
+
+def _get_current_workout_streak(user, today):
+    streak = 0
+    cursor = today
+    while True:
+        if not ProgressLog.objects.filter(user=user, date=cursor, workout_done=True).exists():
+            break
+        streak += 1
+        cursor -= timedelta(days=1)
+    return streak
+
+
+def _build_dashboard_reminders(meal_logs_today, today_log, completed_today):
+    """Daily reminders — scoped entirely to today."""
     reminders = []
+
     if not meal_logs_today.filter(meal_type='breakfast').exists():
-        reminders.append({'id': 'breakfast', 'text': "You haven't logged breakfast yet"})
-    if not today_log or today_log.water_intake < 8:
-        behind = max(8 - (today_log.water_intake if today_log else 0), 0)
-        reminders.append({'id': 'water', 'text': f"You're {behind} cups behind on water"})
-    if not today_log or not today_log.workout_done:
-        reminders.append({'id': 'workout', 'text': f'{max(weekly_goal - completed_workouts, 0)} workouts left to hit your weekly goal'})
+        reminders.append({'id': 'breakfast', 'text': "You haven't logged breakfast yet today"})
+
+    water_intake = today_log.water_intake if today_log else 0
+    if water_intake < 8:
+        behind = 8 - water_intake
+        reminders.append({'id': 'water', 'text': f"You're {behind} cups behind on today's water goal"})
+
+    if not completed_today:
+        reminders.append({'id': 'workout', 'text': "You haven't completed today's workout yet"})
+
     return reminders[:3]
 
 
-def _build_dashboard_insights(week_logs, weekly_goal, weekly_calories, weekly_calorie_target):
-    weekday_logs = week_logs.filter(date__week_day__in=[2, 3, 4, 5, 6], workout_done=True).count()
-    workout_days = week_logs.filter(workout_done=True).count()
-    weekday_consistency = round((weekday_logs / max(5, 1)) * 100)
-    calorie_gap = max(weekly_calorie_target - weekly_calories, 0)
-    completion_rate = round((workout_days / max(weekly_goal, 1)) * 100)
-    return [
-        f'Weekday consistency is at {weekday_consistency}% this week.',
-        f'You are {calorie_gap} kcal away from your weekly burn target.',
-        f'Workout completion is {completion_rate}% of your weekly goal so far.',
-    ]
+def _build_dashboard_insights(today_log, calorie_target, completed_today):
+    """Daily insights — all scoped to today."""
+    insights = []
 
+    # 1. Calorie burn progress (daily, dynamic)
+    calories_burned = today_log.calories_burned if today_log else 0
+    calorie_gap = calorie_target - calories_burned
+    if calorie_gap > 0:
+        insights.append(f"You're {calorie_gap} kcal away from today's burn target.")
+    else:
+        insights.append("You've hit your calorie burn goal today 🎉")
+
+    # 2. Workout status (daily)
+    if completed_today:
+        insights.append("Today's workout is done — great work!")
+    else:
+        insights.append("No workout logged yet today — you've still got time!")
+
+    # 3. Hydration (daily)
+    water = today_log.water_intake if today_log else 0
+    if water >= 8:
+        insights.append("You're well hydrated today 💧")
+    elif water >= 4:
+        insights.append(f"You've had {water} of 8 cups today — keep sipping!")
+    else:
+        insights.append("Drink more water today — aim for 8 cups 💧")
+
+    return insights
+
+
+# ── Feedback ───────────────────────────────────────────────────────────────────
 
 @login_required
 def feedback_entries(request):
@@ -400,7 +501,10 @@ def feedback_entries(request):
                     'message': entry.message,
                     'admin_response': entry.admin_response,
                     'created_at': timezone.localtime(entry.created_at).strftime('%Y-%m-%d %H:%M'),
-                    'responded_at': timezone.localtime(entry.responded_at).strftime('%Y-%m-%d %H:%M') if entry.responded_at else '',
+                    'responded_at': (
+                        timezone.localtime(entry.responded_at).strftime('%Y-%m-%d %H:%M')
+                        if entry.responded_at else ''
+                    ),
                 }
                 for entry in entries
             ]
@@ -430,13 +534,23 @@ def feedback_entries(request):
     }, status=201)
 
 
+# ── Progress log ───────────────────────────────────────────────────────────────
+
 @login_required
 def progress_log_entry(request):
     today = timezone.localdate()
+    date_param = request.GET.get('date') if request.method == 'GET' else request.POST.get('date')
+    target_date = today
+    if date_param:
+        try:
+            target_date = datetime.fromisoformat(date_param).date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=400)
+
     if request.method == 'GET':
-        log = ProgressLog.objects.filter(user=request.user, date=today).first()
+        log = ProgressLog.objects.filter(user=request.user, date=target_date).first()
         if not log:
-            return JsonResponse({'has_record': False, 'date': today.isoformat()})
+            return JsonResponse({'has_record': False, 'date': target_date.isoformat()})
         return JsonResponse({
             'has_record': True,
             'date': log.date.isoformat(),
@@ -446,20 +560,20 @@ def progress_log_entry(request):
             'water_intake': log.water_intake,
         })
 
-    calories_burned = int(request.POST.get('calories_burned') or 0)
-    steps = int(request.POST.get('steps') or 0)
-    water_intake = int(request.POST.get('water_intake') or 0)
-    workout_done = request.POST.get('workout_done') in ('true', 'True', '1', 'on')
+    progress_log, _ = ProgressLog.objects.get_or_create(user=request.user, date=target_date)
+    if 'calories_burned' in request.POST:
+        progress_log.calories_burned = int(request.POST.get('calories_burned') or 0)
+    if 'steps' in request.POST:
+        progress_log.steps = int(request.POST.get('steps') or 0)
+    if 'water_intake' in request.POST:
+        progress_log.water_intake = int(request.POST.get('water_intake') or 0)
+    if 'workout_done' in request.POST:
+        progress_log.workout_done = request.POST.get('workout_done') in ('true', 'True', '1', 'on')
 
-    if calories_burned == 0 and steps == 0 and water_intake == 0 and not workout_done:
-        ProgressLog.objects.filter(user=request.user, date=today).delete()
-        return JsonResponse({'success': True, 'deleted': True, 'date': today.isoformat()})
+    if progress_log.is_empty():
+        progress_log.delete()
+        return JsonResponse({'success': True, 'deleted': True, 'date': target_date.isoformat()})
 
-    progress_log, _ = ProgressLog.objects.get_or_create(user=request.user, date=today)
-    progress_log.calories_burned = calories_burned
-    progress_log.steps = steps
-    progress_log.water_intake = water_intake
-    progress_log.workout_done = workout_done
     progress_log.save()
     return JsonResponse({
         'success': True,
