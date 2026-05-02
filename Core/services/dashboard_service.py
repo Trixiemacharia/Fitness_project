@@ -164,3 +164,41 @@ def get_weight_progress(user):
         'change': change,
         'message': message,
     }
+
+
+def get_meal_plan_vs_actual(user):
+    """
+    Compare today's meal plan suggestions vs what was actually eaten
+    """
+    today = timezone.now().date()
+    day_name = today.strftime('%A').lower()   # e.g 'monday'
+
+    try:
+        meal_plan = MealPlan.objects.get(user=user, is_active=True)
+        plan_day = meal_plan.days.get(day=day_name)
+        plan_items = plan_day.items.select_related('food')
+    except (MealPlan.DoesNotExist, Exception):
+        return {'has_plan': False}
+
+    # What was planned
+    planned = {'breakfast': [], 'lunch': [], 'dinner': [], 'snack': []}
+    for item in plan_items:
+        planned[item.meal_type].append({
+            'food': item.food.name,
+            'quantity': item.quantity,
+            'calories': item.calories,
+        })
+
+    # What was actually eaten
+    daily = get_daily_progress(user, today)
+
+    return {
+        'has_plan': True,
+        'planned': planned,
+        'actual': daily['meals'],
+        'planned_calories': meal_plan.target_calories,
+        'actual_calories': daily['consumed']['calories'],
+        'adherence_pct': round(
+            (daily['consumed']['calories'] / meal_plan.target_calories) * 100, 1
+        ) if meal_plan.target_calories > 0 else 0
+    }

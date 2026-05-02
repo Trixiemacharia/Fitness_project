@@ -135,6 +135,45 @@
             <canvas id="nutr-bar-chart"></canvas>
         </div>
     </div>
+
+    <!-- ✅ MEAL PLAN — inside nutrition screen so it hides with it -->
+    <div id="nutr-meal-plan-section" class="nutr-card" style="display:none;">
+        <div class="nutr-card-head">
+            <span class="nutr-card-title">📋 My Meal Plan</span>
+            <span id="nutr-plan-goal" class="nutr-count-badge"></span>
+        </div>
+        <div class="settings-row" style="padding:0 0 16px 0;">
+            <div class="settings-row-left">
+                <div>
+                    <div class="settings-row-label">Meal plan enabled</div>
+                    <div class="settings-row-sub">Visible when your nutrition goal includes a meal plan</div>
+                </div>
+            </div>
+            <label class="toggle-switch">
+                <input type="checkbox" {% if profile.wants_meal_plan %}checked{% endif %} disabled>
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+
+        <div class="nutr-day-tabs">
+            <button class="nutr-day-tab active" data-day="monday">Mon</button>
+            <button class="nutr-day-tab" data-day="tuesday">Tue</button>
+            <button class="nutr-day-tab" data-day="wednesday">Wed</button>
+            <button class="nutr-day-tab" data-day="thursday">Thu</button>
+            <button class="nutr-day-tab" data-day="friday">Fri</button>
+            <button class="nutr-day-tab" data-day="saturday">Sat</button>
+            <button class="nutr-day-tab" data-day="sunday">Sun</button>
+        </div>
+
+        <div class="nutr-plan-targets" id="nutr-plan-targets"></div>
+
+        <div id="nutr-plan-day-content">
+            <div class="nutr-empty-state"><p>Loading meal plan...</p></div>
+        </div>
+    </div>
+
+    <!-- ✅ NO PLAN STATE — inside nutrition screen so it hides with it -->
+
 </div>
 
 <!-- TOAST -->
