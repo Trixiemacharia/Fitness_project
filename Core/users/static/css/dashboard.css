@@ -429,61 +429,6 @@ body {
     gap: 10px;
 }
 
-/* ── Nutrition / Meal Plan ── */
-.toggle-line {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    color: #5d6f84;
-    flex-wrap: wrap;
-}
-
-.meal-plan-preview {
-    border-radius: 12px;
-    background: #f8fafc;
-    border: 1px solid rgba(120, 144, 173, 0.15);
-    padding: 18px;
-}
-
-.meal-plan-preview.empty { color: #627488; }
-
-.meal-plan-title {
-    font-size: 18px;
-    font-weight: 800;
-    color: #13243d;
-}
-
-.meal-plan-goal {
-    margin: 8px 0 16px;
-    color: #607286;
-    font-size: 14px;
-}
-
-.meal-plan-meal {
-    padding: 12px 0;
-    border-top: 1px solid rgba(103, 127, 156, 0.14);
-}
-
-.meal-plan-meal:first-child {
-    border-top: 0;
-    padding-top: 0;
-}
-
-.meal-plan-meal-type {
-    margin-bottom: 8px;
-    font-weight: 700;
-    color: #17314f;
-}
-
-.meal-plan-item {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    font-size: 13px;
-    color: #52657a;
-}
-
 /* ── Suggested Workouts ── */
 .suggested-workout-list {
     display: grid;

@@ -57,7 +57,6 @@ async function loadHomeDashboard(force = false) {
 
         renderActivitySnapshot(summary.today_activity);
         renderDailyGoalProgress(summary.goal_progress, summary.today_activity);
-        renderMealPlanPreview(summary.meal_plan_enabled, summary.meal_plan_preview);
         renderWeeklyCharts(summary.weekly_stats);
         renderWorkoutVideoGrid(summary.workout_videos || []);
         renderSuggestedWorkoutList(summary.suggested_workouts || []);
@@ -308,15 +307,6 @@ function buildDynamicInsights(summary) {
     if (dayOfWeek === 0 || dayOfWeek === 6) {
         insights.push({ id: `rest_day_${new Date().toDateString()}`, icon: "🛌", text: "It's your rest day — focus on recovery, stretching, and hydration." });
     }
-
-    // ── Meal plan insight ─────────────────────────────────────────────────────
-    if (summary?.meal_plan_enabled && !summary?.meal_plan_preview) {
-        insights.push({ id: "meal_plan_missing", icon: "🥗", text: "Your meal plan is enabled but has no meals for today — check your nutrition tab." });
-    }
-    if (!summary?.meal_plan_enabled) {
-        insights.push({ id: "meal_plan_off", icon: "🥗", text: "Enable your meal plan in the Nutrition tab to get personalised meal suggestions." });
-    }
-
     return insights;
 }
 
@@ -388,54 +378,6 @@ function dismissDashboardReminder(reminderId) {
 function getDismissedReminders() {
     try { return JSON.parse(localStorage.getItem(DISMISSED_REMINDERS_KEY) || "[]"); }
     catch { return []; }
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// MEAL PLAN PREVIEW
-// ══════════════════════════════════════════════════════════════════════════════
-
-function renderMealPlanPreview(enabled, preview) {
-    const toggle = document.getElementById("dashboardMealPlanToggle");
-    const card = document.getElementById("mealPlanPreviewCard");
-    if (toggle) toggle.checked = !!enabled;
-    if (!card) return;
-
-    if (!enabled) {
-        card.className = "meal-plan-preview empty";
-        card.innerHTML = "<p>Meal plan is currently turned off for this profile.</p>";
-        return;
-    }
-    if (!preview) {
-        card.className = "meal-plan-preview empty";
-        card.innerHTML = "<p>No active meal plan was found for today.</p>";
-        return;
-    }
-    if (!preview.meals?.length) {
-        card.className = "meal-plan-preview";
-        card.innerHTML = `
-            <div class="meal-plan-title">${preview.name}</div>
-            <div class="meal-plan-goal">${preview.goal} goal • ${Math.round(preview.target_calories || 0)} kcal target</div>
-            <p>No meals are scheduled for today yet.</p>
-        `;
-        return;
-    }
-
-    card.className = "meal-plan-preview";
-    card.innerHTML = `
-        <div class="meal-plan-title">${preview.name}</div>
-        <div class="meal-plan-goal">${preview.goal} goal • ${Math.round(preview.target_calories || 0)} kcal target</div>
-        ${preview.meals.map((meal) => `
-            <div class="meal-plan-meal">
-                <div class="meal-plan-meal-type">${meal.meal_type}</div>
-                ${meal.items.map((item) => `
-                    <div class="meal-plan-item">
-                        <span>${item.food} • ${trimNumber(item.quantity)} ${item.unit}</span>
-                        <span>${trimNumber(item.calories)} kcal</span>
-                    </div>
-                `).join("")}
-            </div>
-        `).join("")}
-    `;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

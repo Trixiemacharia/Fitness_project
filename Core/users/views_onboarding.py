@@ -19,9 +19,6 @@ ONBOARDING_STEPS = [
     {"field": "preferred_focus", "question": "Which areas do you want to focus on?", "type": "multi", "choices": [
         ('legs','Legs'),('abs','Abs'),('glutes','Glutes'),('arms','Arms'),('back','Back'),('shoulder','Shoulders'),
     ]},
-    {"field": "wants_meal_plan", "question": "Would you like a meal plan?", "type": "choice", "choices": [
-        ('Yes','Yes'),('No','No'),
-    ]},
 ]
 
 
@@ -44,7 +41,6 @@ def onboarding(request):
             activity_level=data.get("activity_level"),
             fitness_level=data.get("fitness_level"),
             prefered_focus=data.get("preferred_focus", []),
-            wants_meal_plan=data.get("wants_meal_plan") == "Yes",
         )
 
         # Save initial weight log — indented inside this block
@@ -62,13 +58,6 @@ def onboarding(request):
             except Exception as e:
                 print(f"WeightLog creation failed: {e}")
 
-        # Auto-generate meal plan — also indented inside this block
-        if profile.wants_meal_plan:
-            try:
-                from services.meal_plan_service import generate_meal_plan
-                generate_meal_plan(request.user)
-            except Exception as e:
-                print(f"Meal plan generation failed: {e}")
 
         request.session.pop("onboarding_data", None)
         return redirect("dashboard")  # ← this was also missing from your original!
