@@ -6,7 +6,7 @@ from datetime import date
 ONBOARDING_STEPS = [
     {"field": "gender", "question": "What is your gender?", "type": "choice", "choices": [('M','Male'),('F','Female')]},
     {"field": "date_of_birth", "question": "What is your date of birth?", "type": "dob"},
-    {"field": "weight", "question": "What is your current weight?", "type": "number"},
+    {"field": "weight", "question": "What is your current weight(kg)?", "type": "number"},
     {"field": "height", "question": "What is your height (cm)?", "type": "height"},
     {"field": "goal_type", "question": "What is your fitness goal?", "type": "choice", "choices": [('tone','Tone'),('bulk','Bulk'),('lose_weight','Lose Weight')]},
     {"field": "activity_level", "question": "How active are you?", "type": "choice", "choices": [
