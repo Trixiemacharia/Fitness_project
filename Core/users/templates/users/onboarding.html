@@ -8,39 +8,45 @@
     <body>
         <div class="onboarding-container">
             <div class="question-box">
-                <h2>{{question.question}}</h2>
+                <h2>{{ question.question }}</h2>
                 <form method="POST">
                     {% csrf_token %}
+
+                    {% if error %}
+                        <p class="form-error">{{ error }}</p>
+                    {% endif %}
+
                     {% if question.type == 'choice' %}
                         {% for choice in question.choices %}
                         <label class="choice-label">
-                            <input type="radio" name="answer" value="{{ choice.0 }}" required>{{ choice.1 }}
+                            <input type="radio" name="answer" value="{{ choice.0 }}" {% if form_data.answer == choice.0 %}checked{% endif %} required>{{ choice.1 }}
                         </label><br>
                         {% endfor %}
 
                     {% elif question.type == 'multi' %}
-                        {% for choice in question.choices %}   {# ← removed the stray label before the loop #}
+                        {% for choice in question.choices %}
                         <label class="choice-label">
-                            <input type="checkbox" name="answer" value="{{ choice.0 }}">{{ choice.1 }}
+                            <input type="checkbox" name="answer" value="{{ choice.0 }}" {% if choice.0 in selected_answers %}checked{% endif %}>{{ choice.1 }}
                         </label><br>
                         {% endfor %}
 
                     {% elif question.type == 'number' %}
                         <label class="choice-label">
-                            <input type="number" name="answer" min="1" required>
+                            <input type="number" name="answer" min="1" step="0.1" value="{{ form_data.answer|default:'' }}" required>
                         </label><br>
 
                     {% elif question.type == 'height' %}
                         <label class="choice-label">
-                            <input type="number" name="answer" min="50" max="300" required>cm
+                            <input type="number" name="answer" min="50" max="300" step="0.1" value="{{ form_data.answer|default:'' }}" required>cm
                         </label><br>
 
                     {% elif question.type == 'dob' %}
                         <div class="dob-fields">
-                            <input type="number" name="dob_day"   placeholder="DD"   min="1"    max="31"   required style="width:60px">
-                            <input type="number" name="dob_month" placeholder="MM"   min="1"    max="12"   required style="width:60px">
-                            <input type="number" name="dob_year"  placeholder="YYYY" min="1900" max="2099" required style="width:80px">
+                            <input type="number" name="dob_day" placeholder="DD" min="1" max="31" value="{{ form_data.dob_day|default:'' }}" required style="width:60px">
+                            <input type="number" name="dob_month" placeholder="MM" min="1" max="12" value="{{ form_data.dob_month|default:'' }}" required style="width:60px">
+                            <input type="number" name="dob_year" placeholder="YYYY" min="1900" max="2099" value="{{ form_data.dob_year|default:'' }}" required style="width:80px">
                         </div>
+                        <p class="field-hint">Use your real birth date. Future dates and unrealistic ages will not be accepted.</p>
                     {% endif %}
 
                     <button type="submit">Next</button>

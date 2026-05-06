@@ -69,9 +69,14 @@
 
         <div id="dashboard">
             <div class="dashboard-header" style="margin-bottom:20px;padding-top:8px;">
-                <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;color:black;">
-                    Hey, <span style="color:black;">{{ profile.name|truncatechars:12 }}</span>
-                </h1>
+                <div class="dashboard-header-copy">
+                    <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;text-transform:uppercase;color:black;">
+                        Hey, <span style="color:black;">{{ profile.name|truncatechars:12 }}</span>
+                    </h1>
+                    <p class="dashboard-goal-line">
+                        Goal: <strong>{{ dashboard_goal_label }}</strong> - {{ dashboard_goal_message }}
+                    </p>
+                </div>
             </div>
 
             <!-- ══════════════════════════════════════════
@@ -79,7 +84,36 @@
             ══════════════════════════════════════════ -->
             <div class="dashboard-shell">
 
-                <!-- ── ROW 1: Activity Snapshot | Nutrition | Weekly Trends ── -->
+                <!-- ── ROW 1: Suggested Workouts | Smart Summary ── -->
+                <div class="dashboard-row">
+
+                    <!-- LEFT: Suggested Workouts -->
+                    <section class="dashboard-panel glass-panel">
+                        <div class="panel-head">
+                            <div>
+                                <p class="panel-eyebrow">Suggested Workouts</p>
+                                <h3>Focused for your goals</h3>
+                            </div>
+                        </div>
+                        <div id="suggestedWorkoutList" class="suggested-workout-list"></div>
+                    </section>
+
+                    <!-- RIGHT: Smart Summary -->
+                    <section class="dashboard-panel glass-panel insights-panel">
+                        <div class="panel-head">
+                            <div>
+                                <p class="panel-eyebrow">Smart Summary</p>
+                                <h3>Reminders and insights</h3>
+                            </div>
+                        </div>
+                        <div id="dashboardReminders" class="reminders-list"></div>
+                        <div id="dashboardInsights" class="insights-list"></div>
+                    </section>
+
+                </div><!-- /.dashboard-row (row 1) -->
+
+
+                <!-- ── ROW 2: Activity Snapshot | Daily Trends | Progress Goal ── -->
                 <div class="dashboard-row">
 
                     <!-- LEFT: Activity Snapshot -->
@@ -130,7 +164,8 @@
                             </article>
                         </div>
                     </section>
-                    <!-- RIGHT: Daily Trends -->
+
+                    <!-- MIDDLE: Daily Trends -->
                     <section class="dashboard-panel glass-panel">
                         <div class="panel-head">
                             <div>
@@ -159,13 +194,7 @@
                         </div>
                     </section>
 
-                </div><!-- /.dashboard-row (row 1) -->
-
-
-                <!-- ── ROW 2: Progress Goal | Suggested Workouts | Smart Summary ── -->
-                <div class="dashboard-row">
-
-                    <!-- LEFT: Progress Goal -->
+                    <!-- RIGHT: Progress Goal -->
                     <section class="dashboard-panel goal-progress-panel glass-panel">
                         <div class="panel-head">
                             <div>
@@ -206,29 +235,6 @@
                                 </div>
                             </div>
                         </div>
-                    </section>
-
-                    <!-- MIDDLE: Suggested Workouts -->
-                    <section class="dashboard-panel glass-panel">
-                        <div class="panel-head">
-                            <div>
-                                <p class="panel-eyebrow">Suggested Workouts</p>
-                                <h3>Focused for your goals</h3>
-                            </div>
-                        </div>
-                        <div id="suggestedWorkoutList" class="suggested-workout-list"></div>
-                    </section>
-
-                    <!-- RIGHT: Smart Summary -->
-                    <section class="dashboard-panel glass-panel insights-panel">
-                        <div class="panel-head">
-                            <div>
-                                <p class="panel-eyebrow">Smart Summary</p>
-                                <h3>Reminders and insights</h3>
-                            </div>
-                        </div>
-                        <div id="dashboardReminders" class="reminders-list"></div>
-                        <div id="dashboardInsights" class="insights-list"></div>
                     </section>
 
                 </div><!-- /.dashboard-row (row 2) -->
@@ -556,9 +562,6 @@
         <div id="settings-toast" class="settings-toast"></div>
     </div><!-- /#profile-screen -->
 
-</div><!-- /.main-content -->
-
-
 <!--LOG MODALS-->
 
 <!-- Weight modal -->
@@ -847,6 +850,8 @@
     </div>
 
 </div>
+
+</div><!-- /.main-content -->
 
 <div id="workoutVideoModal" class="video-modal-overlay" onclick="if(event.target===this)closeWorkoutVideoModal()">
     <div class="video-modal">

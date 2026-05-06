@@ -13,6 +13,16 @@ from nutrition.models import MealLog
 from users.models import Feedback, MealPlan, ProgressLog, UserProfile
 
 
+def _get_dashboard_goal_copy(profile):
+    goal_label = profile.get_goal_type_display() if getattr(profile, "goal_type", None) else "Fitness Goal"
+    goal_messages = {
+        "tone": "Ready to kick-start your fitness journey and stay consistent today?",
+        "bulk": "Ready to build strength and power through your next workout?",
+        "lose_weight": "Ready to kick-start your fitness journey and keep moving toward your target?",
+    }
+    return goal_label, goal_messages.get(profile.goal_type, "Ready to kick-start your fitness journey today?")
+
+
 @login_required
 def create_profile(request):
     if request.method == 'POST':
@@ -63,10 +73,13 @@ def dashboard(request):
         return redirect("onboarding")
 
     categories = Category.objects.all()
+    dashboard_goal_label, dashboard_goal_message = _get_dashboard_goal_copy(profile)
 
     return render(request, "users/dashboard.html", {
         "profile": profile,
         "categories": categories,
+        "dashboard_goal_label": dashboard_goal_label,
+        "dashboard_goal_message": dashboard_goal_message,
     })
 
 

@@ -21,6 +21,84 @@ ONBOARDING_STEPS = [
     ]},
 ]
 
+MIN_BIRTH_YEAR = 1900
+MIN_AGE = 13
+MAX_AGE = 100
+
+
+def _validate_dob(post_data):
+    day = (post_data.get("dob_day") or "").strip()
+    month = (post_data.get("dob_month") or "").strip()
+    year = (post_data.get("dob_year") or "").strip()
+
+    if not all([day, month, year]):
+        return None, "Please enter your full date of birth."
+
+    try:
+        dob = date(int(year), int(month), int(day))
+    except ValueError:
+        return None, "Please enter a valid date of birth."
+
+    today = date.today()
+    age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+    if dob > today:
+        return None, "Date of birth cannot be in the future."
+    if dob.year < MIN_BIRTH_YEAR:
+        return None, f"Please enter a birth year from {MIN_BIRTH_YEAR} onwards."
+    if age < MIN_AGE:
+        return None, f"You must be at least {MIN_AGE} years old to use this app."
+    if age > MAX_AGE:
+        return None, "Please enter a realistic date of birth."
+
+    return dob.isoformat(), None
+
+
+def _validate_answer(question, post_data):
+    question_type = question["type"]
+
+    if question_type == "multi":
+        answer = post_data.getlist("answer")
+        valid_choices = {choice[0] for choice in question.get("choices", [])}
+        if not answer:
+            return None, "Please select at least one option."
+        if any(choice not in valid_choices for choice in answer):
+            return None, "Please select valid focus areas."
+        return answer, None
+
+    if question_type == "dob":
+        return _validate_dob(post_data)
+
+    answer = (post_data.get("answer") or "").strip()
+    if not answer:
+        return None, "This field is required."
+
+    if question_type == "choice":
+        valid_choices = {choice[0] for choice in question.get("choices", [])}
+        if answer not in valid_choices:
+            return None, "Please choose one of the listed options."
+        return answer, None
+
+    if question_type == "number":
+        try:
+            value = float(answer)
+        except ValueError:
+            return None, "Please enter a valid number."
+        if value <= 0 or value > 500:
+            return None, "Please enter a realistic weight."
+        return answer, None
+
+    if question_type == "height":
+        try:
+            value = float(answer)
+        except ValueError:
+            return None, "Please enter a valid height."
+        if value < 50 or value > 300:
+            return None, "Please enter a height between 50 cm and 300 cm."
+        return answer, None
+
+    return answer, None
+
 
 @login_required
 def onboarding(request):
@@ -66,19 +144,24 @@ def onboarding(request):
 
     if request.method == "POST":
         data = request.session.get("onboarding_data", {})
+        answer, error = _validate_answer(question, request.POST)
 
-        if question["type"] == "multi":
-            answer = request.POST.getlist("answer")
-        elif question["type"] == "dob":
-            day   = request.POST.get("dob_day", "").zfill(2)
-            month = request.POST.get("dob_month", "").zfill(2)
-            year  = request.POST.get("dob_year", "")
-            answer = f"{year}-{month}-{day}" if day and month and year else None
-        else:
-            answer = request.POST.get("answer")
+        if error:
+            return render(request, "users/onboarding.html", {
+                "question": question,
+                "step": step,
+                "error": error,
+                "form_data": request.POST,
+                "selected_answers": request.POST.getlist("answer"),
+            })
 
         data[question["field"]] = answer
         request.session["onboarding_data"] = data
         return redirect(f"/onboarding/?step={step + 1}")
 
-    return render(request, "users/onboarding.html", {"question": question, "step": step})
+    return render(request, "users/onboarding.html", {
+        "question": question,
+        "step": step,
+        "form_data": {},
+        "selected_answers": [],
+    })
