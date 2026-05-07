@@ -16,9 +16,9 @@ from users.models import Feedback, MealPlan, ProgressLog, UserProfile
 def _get_dashboard_goal_copy(profile):
     goal_label = profile.get_goal_type_display() if getattr(profile, "goal_type", None) else "Fitness Goal"
     goal_messages = {
-        "tone": "Ready to kick-start your fitness journey and stay consistent today?",
-        "bulk": "Ready to build strength and power through your next workout?",
-        "lose_weight": "Ready to kick-start your fitness journey and keep moving toward your target?",
+        "tone": "Welcome!! Ready to kick-start your fitness journey and stay consistent today?",
+        "bulk": "Welcome!! Ready to build strength and power through your next workout?",
+        "lose_weight": "Welcome!! Ready to kick-start your fitness journey and keep moving toward your target?",
     }
     return goal_label, goal_messages.get(profile.goal_type, "Ready to kick-start your fitness journey today?")
 

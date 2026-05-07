@@ -46,7 +46,7 @@
                             <input type="number" name="dob_month" placeholder="MM" min="1" max="12" value="{{ form_data.dob_month|default:'' }}" required style="width:60px">
                             <input type="number" name="dob_year" placeholder="YYYY" min="1900" max="2099" value="{{ form_data.dob_year|default:'' }}" required style="width:80px">
                         </div>
-                        <p class="field-hint">Use your real birth date. Future dates and unrealistic ages will not be accepted.</p>
+                        
                     {% endif %}
 
                     <button type="submit">Next</button>
